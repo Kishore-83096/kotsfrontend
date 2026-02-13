@@ -1,0 +1,438 @@
+<article class="detail-card">
+  <header class="page-header">
+    <div>
+      <h2>Admin Building Detail</h2>
+    </div>
+    <div class="header-actions">
+      <a class="action-btn ghost" routerLink="/admins">Back To Admin Buildings</a>
+      <button type="button" class="action-btn primary" (click)="openUpdateModal()" [disabled]="isLoading()">Update Building</button>
+      <button type="button" class="action-btn primary" (click)="openAddTowerModal()" [disabled]="isLoading()">Add Tower</button>
+      <button type="button" class="action-btn primary" (click)="openAddAmenityModal()" [disabled]="isLoading()">Add Amenity</button>
+      <button type="button" class="action-btn ghost" (click)="openViewAmenitiesModal()" [disabled]="isLoading()">View Amenities</button>
+      <button type="button" class="action-btn danger" (click)="deleteBuilding()" [disabled]="isDeletingBuilding() || isLoading()">
+        {{ isDeletingBuilding() ? 'Deleting...' : 'Delete Building' }}
+      </button>
+    </div>
+  </header>
+
+  @if (pageError()) {
+    <p class="error-text">{{ pageError() }}</p>
+  }
+  @if (pageMessage()) {
+    <p class="success-text">{{ pageMessage() }}</p>
+  }
+
+  @if (isLoading() || isLoadingTowers()) {
+    <section class="detail-grid">
+      <article class="building-overview-card">
+        <div class="skeleton-block skeleton-image"></div>
+        <div class="detail-panel">
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </div>
+      </article>
+    </section>
+  }
+
+  @if (buildingResponse()?.data; as building) {
+    <section class="detail-grid">
+      <article class="building-overview-card">
+        @if (building.picture_url) {
+          <img class="building-image clickable-image" [src]="building.picture_url" [alt]="building.name + ' picture'" (click)="openImagePreview(building.picture_url)" />
+        } @else {
+          <div class="building-image-placeholder">No Image</div>
+        }
+
+        <div class="detail-panel">
+          <h3>{{ building.name }}</h3>
+          <p class="building-address">{{ building.address }}, {{ building.city }}, {{ building.state }}, {{ building.pincode }}</p>
+          <div class="building-meta-row">
+            <span class="admin-chip">Building ID: {{ building.id }}</span>
+            <span class="admin-chip">Admin ID: {{ building.admin_id }}</span>
+            <span class="admin-chip">Total Towers: {{ building.total_towers }}</span>
+          </div>
+          <p class="meta-line"><strong>Created At:</strong> {{ building.created_at }}</p>
+        </div>
+      </article>
+    </section>
+  }
+
+  <section class="towers-section">
+    <header class="towers-header">
+      <h3>Building Towers</h3>
+    </header>
+
+    @if (towersError()) {
+      <p class="error-text">{{ towersError() }}</p>
+    }
+
+    @if (!isLoadingTowers() && towersData().length === 0 && !towersError()) {
+      <p class="empty-text">No towers found for this building.</p>
+    }
+
+    <div class="towers-grid">
+      @for (tower of towersData(); track tower.id) {
+        <article class="tower-card">
+          @if (tower.picture_url) {
+            <img class="tower-image clickable-image" [src]="tower.picture_url" [alt]="tower.name + ' picture'" (click)="openImagePreview(tower.picture_url)" />
+          } @else {
+            <div class="tower-image-placeholder">No Image</div>
+          }
+
+          <div class="tower-content">
+            <h4 class="tower-title">{{ tower.name }}</h4>
+            <div class="tower-meta-row">
+              <span class="admin-chip">Tower ID: {{ tower.id }}</span>
+              <span class="admin-chip">Floors: {{ tower.floors }}</span>
+              <span class="admin-chip">Total Flats: {{ tower.total_flats }}</span>
+            </div>
+            <p class="tower-line">Created At: {{ tower.created_at }}</p>
+            <a class="action-btn primary tower-view-btn" [routerLink]="['/admins/buildings', tower.building_id, 'towers', tower.id]">Manage Tower</a>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+</article>
+
+@if (isUpdateModalOpen()) {
+  <section class="modal-backdrop" (click)="closeUpdateModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Update Building</h3>
+        <button type="button" class="action-btn ghost" (click)="closeUpdateModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (updateModalError()) {
+        <p class="error-text">{{ updateModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input type="text" [value]="updateName()" (input)="setUpdateName($any($event.target).value)" [disabled]="isUpdatingBuilding()" />
+        </label>
+        <label>
+          <span>Address</span>
+          <input
+            type="text"
+            [value]="updateAddress()"
+            (input)="setUpdateAddress($any($event.target).value)"
+            [disabled]="isUpdatingBuilding()"
+          />
+        </label>
+        <label>
+          <span>City</span>
+          <input type="text" [value]="updateCity()" (input)="setUpdateCity($any($event.target).value)" [disabled]="isUpdatingBuilding()" />
+        </label>
+        <label>
+          <span>State</span>
+          <input type="text" [value]="updateState()" (input)="setUpdateState($any($event.target).value)" [disabled]="isUpdatingBuilding()" />
+        </label>
+        <label>
+          <span>Pincode</span>
+          <input
+            type="text"
+            [value]="updatePincode()"
+            (input)="setUpdatePincode($any($event.target).value)"
+            [disabled]="isUpdatingBuilding()"
+          />
+        </label>
+        <label>
+          <span>Total Towers</span>
+          <input
+            type="number"
+            [value]="updateTotalTowers()"
+            (input)="setUpdateTotalTowers($any($event.target).value)"
+            [disabled]="isUpdatingBuilding()"
+          />
+        </label>
+        <label class="file-field">
+          <span>Building Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-update-building-picture">Choose Picture</label>
+            <input
+              id="admin-update-building-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onUpdatePictureSelected($event)"
+              [disabled]="isUpdatingBuilding()"
+            />
+          </div>
+          @if (updatePictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (updatePicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected building preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="updateBuilding()" [disabled]="isUpdatingBuilding()">
+        {{ isUpdatingBuilding() ? 'Updating...' : 'Update Building' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isAddAmenityModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAddAmenityModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Add Amenity</h3>
+        <button type="button" class="action-btn ghost" (click)="closeAddAmenityModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (addAmenityModalError()) {
+        <p class="error-text">{{ addAmenityModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input type="text" [value]="addAmenityName()" (input)="setAddAmenityName($any($event.target).value)" [disabled]="isAddingAmenity()" />
+        </label>
+        <label>
+          <span>Description (optional)</span>
+          <input
+            type="text"
+            [value]="addAmenityDescription()"
+            (input)="setAddAmenityDescription($any($event.target).value)"
+            [disabled]="isAddingAmenity()"
+          />
+        </label>
+        <label class="file-field">
+          <span>Amenity Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-add-amenity-picture">Choose Picture</label>
+            <input
+              id="admin-add-amenity-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onAddAmenityPictureSelected($event)"
+              [disabled]="isAddingAmenity()"
+            />
+          </div>
+          @if (addAmenityPictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (addAmenityPicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected amenity preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="addAmenity()" [disabled]="isAddingAmenity()">
+        {{ isAddingAmenity() ? 'Creating...' : 'Create Amenity' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isViewAmenitiesModalOpen()) {
+  <section class="modal-backdrop" (click)="closeViewAmenitiesModal()">
+    <article class="action-modal amenities-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Building Amenities</h3>
+        <div class="header-actions">
+          <button type="button" class="action-btn ghost" (click)="closeViewAmenitiesModal()">Close</button>
+        </div>
+      </header>
+      <div class="modal-content">
+
+      @if (amenitiesModalError()) {
+        <p class="error-text">{{ amenitiesModalError() }}</p>
+      }
+
+      @if (isLoadingAmenities()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-image"></div>
+        </div>
+      }
+
+      @if (!isLoadingAmenities() && amenitiesData().length === 0 && !amenitiesModalError()) {
+        <p class="empty-text">No amenities found for this building.</p>
+      }
+
+      <div class="amenities-list">
+        @for (amenity of amenitiesData(); track amenity.id) {
+          <article class="amenity-card">
+            @if (amenity.picture_url) {
+              <img class="amenity-image clickable-image" [src]="amenity.picture_url" [alt]="amenity.name + ' picture'" (click)="openImagePreview(amenity.picture_url)" />
+            } @else {
+              <div class="amenity-image-placeholder">No Image</div>
+            }
+            <div class="amenity-content">
+              <h4>{{ amenity.name }}</h4>
+              <div class="amenity-meta-row">
+                <span class="admin-chip">Amenity ID: {{ amenity.id }}</span>
+                <span class="admin-chip">Created: {{ amenity.created_at }}</span>
+              </div>
+              <p class="amenity-description"><strong>Description:</strong> {{ amenity.description || '-' }}</p>
+              <div class="amenity-actions">
+                <button type="button" class="action-btn ghost" (click)="openEditAmenityModal(amenity)" [disabled]="deletingAmenityId() === amenity.id">
+                  Edit Amenity
+                </button>
+                <button type="button" class="action-btn danger" (click)="deleteAmenity(amenity.id)" [disabled]="deletingAmenityId() === amenity.id">
+                  {{ deletingAmenityId() === amenity.id ? 'Deleting...' : 'Delete Amenity' }}
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isEditAmenityModalOpen()) {
+  <section class="modal-backdrop" (click)="closeEditAmenityModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Update Amenity</h3>
+        <button type="button" class="action-btn ghost" (click)="closeEditAmenityModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (editAmenityModalError()) {
+        <p class="error-text">{{ editAmenityModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input type="text" [value]="editAmenityName()" (input)="setEditAmenityName($any($event.target).value)" [disabled]="isUpdatingAmenity()" />
+        </label>
+        <label>
+          <span>Description (optional)</span>
+          <input
+            type="text"
+            [value]="editAmenityDescription()"
+            (input)="setEditAmenityDescription($any($event.target).value)"
+            [disabled]="isUpdatingAmenity()"
+          />
+        </label>
+        <label class="file-field">
+          <span>Amenity Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-edit-amenity-picture">Choose Picture</label>
+            <input
+              id="admin-edit-amenity-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onEditAmenityPictureSelected($event)"
+              [disabled]="isUpdatingAmenity()"
+            />
+          </div>
+          @if (editAmenityPictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (editAmenityPicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected amenity preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="updateAmenity()" [disabled]="isUpdatingAmenity()">
+        {{ isUpdatingAmenity() ? 'Updating...' : 'Update Amenity' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
+
+
+@if (isAddTowerModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAddTowerModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Add Tower</h3>
+        <button type="button" class="action-btn ghost" (click)="closeAddTowerModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (addTowerModalError()) {
+        <p class="error-text">{{ addTowerModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input
+            type="text"
+            maxlength="50"
+            [value]="addTowerName()"
+            (input)="setAddTowerName($any($event.target).value)"
+            [disabled]="isAddingTower()"
+          />
+        </label>
+        <label>
+          <span>Floors</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [value]="addTowerFloors()"
+            (input)="setAddTowerFloors($any($event.target).value)"
+            [disabled]="isAddingTower()"
+          />
+        </label>
+        <label>
+          <span>Total Flats (optional)</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [value]="addTowerTotalFlats()"
+            (input)="setAddTowerTotalFlats($any($event.target).value)"
+            [disabled]="isAddingTower()"
+          />
+        </label>
+        <label class="file-field">
+          <span>Tower Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-add-tower-picture">Choose Picture</label>
+            <input
+              id="admin-add-tower-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onAddTowerPictureSelected($event)"
+              [disabled]="isAddingTower()"
+            />
+          </div>
+          @if (addTowerPictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (addTowerPicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected tower preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="addTower()" [disabled]="isAddingTower()">
+        {{ isAddingTower() ? 'Creating...' : 'Create Tower' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}

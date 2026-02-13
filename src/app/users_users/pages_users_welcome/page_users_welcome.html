@@ -1,0 +1,129 @@
+<article class="welcome-card">
+  <header class="content-header">
+    <h2>Welcome Back</h2>
+  </header>
+
+  @if (userDataError()) {
+    <section class="result-card">
+      <h3>Buildings Fetch Error</h3>
+      <p class="error-text">{{ userDataError() }}</p>
+    </section>
+  }
+
+  @if (buildingsData().length === 0 && !isLoadingUserData() && !userDataError()) {
+    <section class="result-card">
+      <h3>No Buildings Found</h3>
+      <p class="empty-text">No building records were found.</p>
+    </section>
+  }
+
+  @if (isLoadingUserData()) {
+    <section class="buildings-grid">
+      @for (item of [1, 2, 3]; track item) {
+        <article class="building-card">
+          <div class="skeleton-block skeleton-image"></div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </article>
+      }
+    </section>
+  }
+
+  <section class="buildings-grid">
+    @for (building of buildingsData(); track building.id) {
+      <article class="building-card">
+        @if (building.picture_url) {
+          <img
+            class="building-image clickable-image"
+            [src]="building.picture_url"
+            [alt]="building.name + ' picture'"
+            (click)="openImagePreview(building.picture_url); $event.stopPropagation()"
+          />
+        } @else {
+          <div class="building-image-placeholder">No Image</div>
+        }
+
+        <div
+          class="building-content"
+          role="button"
+          tabindex="0"
+          (click)="openBuildingTowers(building.id)"
+          (keydown.enter)="openBuildingTowers(building.id)"
+          (keydown.space)="openBuildingTowers(building.id); $event.preventDefault()"
+          aria-label="Open towers for {{ building.name }}"
+        >
+          <h3>{{ building.name }}</h3>
+          <p class="building-address">{{ building.full_address ?? (building.address + ', ' + building.city + ', ' + building.state + ', ' + building.pincode) }}</p>
+
+          <div class="building-meta-table">
+            <p><span>Building ID</span><strong>{{ building.id }}</strong></p>
+            <p><span>Towers</span><strong>{{ building.towers_count ?? building.total_towers ?? 'N/A' }}</strong></p>
+            <p><span>Total Flats</span><strong>{{ building.flats_count ?? 'N/A' }}</strong></p>
+            <p><span>Available Flats</span><strong>{{ building.available_flats_count ?? 'N/A' }}</strong></p>
+            <p class="meta-full">
+              <span>Summary Amenities</span>
+              <strong>{{ amenitiesText(building) }}</strong>
+              <button type="button" class="view-btn summary-amenities-action" (click)="openAmenitiesModal(building); $event.stopPropagation()">
+              View Amenities
+              </button>
+            </p>
+          </div>
+        </div>
+      </article>
+    }
+  </section>
+</article>
+
+@if (isAmenitiesModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAmenitiesModal()">
+    <article class="action-modal amenities-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>{{ selectedAmenitiesBuilding()?.name }} Amenities</h3>
+        <button type="button" class="view-btn ghost" (click)="closeAmenitiesModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (isAmenitiesModalLoading()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-image"></div>
+        </div>
+      }
+
+      @if (amenitiesModalError()) {
+        <p class="error-text">{{ amenitiesModalError() }}</p>
+      }
+
+      @if (!isAmenitiesModalLoading() && !amenitiesModalError() && amenitiesModalData().length === 0) {
+        <p class="amenity-desc">No amenities found for this building.</p>
+      }
+
+      @if (amenitiesModalData().length > 0) {
+        <p class="building-name-line"><strong>Building:</strong> {{ selectedAmenitiesBuilding()?.name ?? 'N/A' }}</p>
+
+        <div class="amenities-list">
+          @for (amenity of amenitiesModalData(); track amenity.id) {
+            <article class="amenity-card">
+              @if (amenity.picture_url) {
+                <img class="amenity-image clickable-image" [src]="amenity.picture_url" [alt]="amenity.name + ' image'" (click)="openImagePreview(amenity.picture_url)" />
+              } @else {
+                <div class="amenity-image-placeholder">No Image</div>
+              }
+
+              <div class="amenity-content">
+                <h4>{{ amenity.name }}</h4>
+                <div class="amenity-meta-row">
+                  <span class="amenity-chip">Amenity ID: {{ amenity.id }}</span>
+                </div>
+                <p class="amenity-description"><strong>Description:</strong> {{ amenity.description ?? 'No description' }}</p>
+              </div>
+            </article>
+          }
+        </div>
+      }
+      </div>
+    </article>
+  </section>
+}

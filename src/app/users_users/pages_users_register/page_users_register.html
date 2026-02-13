@@ -1,0 +1,32 @@
+<article class="auth-card">
+  <h2>Users Registration</h2>
+  <p>Create your account. After successful registration, you will be auto logged in and redirected to Home.</p>
+
+  <form [formGroup]="registerForm" (ngSubmit)="submitRegistration()" class="auth-form">
+    <label>
+      Email
+      <input type="email" formControlName="email" placeholder="user@example.com" />
+    </label>
+    @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+      <p class="field-error">Please enter a valid email.</p>
+    }
+
+    <label>
+      Password
+      <input type="password" formControlName="password" placeholder="Your password" />
+    </label>
+    @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+      <p class="field-error">Password must be at least 6 characters.</p>
+    }
+
+    @if (formError()) {
+      <p class="form-error">{{ formError() }}</p>
+    }
+
+    <button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Creating account...' : 'Register' }}
+    </button>
+  </form>
+
+  <p class="alt-link">Already have an account? <a routerLink="/users/login">Go to Login</a></p>
+</article>

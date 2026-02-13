@@ -1,1 +1,463 @@
-/* You can add global styles to this file, and also import other style files */
+@import './theme.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--gradient-page);
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.32;
+  background-image: linear-gradient(rgba(104, 86, 61, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(104, 86, 61, 0.08) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+.global-loading-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  pointer-events: none;
+}
+
+.global-loading-track.active {
+  opacity: 1;
+}
+
+.global-loading-runner {
+  position: absolute;
+  top: 0;
+  left: -38%;
+  width: 38%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary-soft) 35%, #fff),
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary-soft) 35%, #fff)
+  );
+  animation: global-line-run 1s ease-in-out infinite;
+}
+
+.skeleton-block {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-surface-muted) 70%, #fff);
+}
+
+.skeleton-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: skeleton-sweep 1.15s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  margin: 0.42rem 0;
+}
+
+.skeleton-line.lg {
+  height: 18px;
+}
+
+.skeleton-line.sm {
+  height: 9px;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 160px;
+  margin-bottom: 0.55rem;
+}
+
+.route-transition-overlay {
+  position: fixed;
+  top: 6.35rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 800;
+  padding: 1.2rem 1.6rem;
+  background: color-mix(in srgb, var(--color-surface-muted) 78%, #fff);
+  backdrop-filter: blur(6px);
+}
+
+.route-welcome-grid {
+  width: min(1520px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.route-welcome-card {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 0.85rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 16px;
+  background: var(--color-surface-muted);
+  box-shadow: var(--shadow-soft);
+  padding: 0.8rem;
+}
+
+.route-welcome-card .skeleton-image {
+  min-height: clamp(220px, 26vw, 300px);
+  margin: 0;
+}
+
+.route-welcome-card .skeleton-line {
+  margin: 0.28rem 0;
+}
+
+.profile-picture-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-picture-inline-actions .upload-field {
+  margin: 0;
+}
+
+.profile-picture-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.profile-picture-controls-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+
+.upload-stack-box {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  padding: 0.4rem 0.48rem;
+  background: color-mix(in srgb, var(--color-surface-subtle) 68%, #fff);
+}
+
+.upload-stack-btn {
+  white-space: nowrap;
+}
+
+.compact-danger-btn {
+  align-self: center;
+  padding: 0.4rem 0.78rem;
+}
+
+.table-header-dropdown {
+  margin: 0.2rem 0 0.65rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  padding: 0.7rem 0.78rem;
+  background: color-mix(in srgb, var(--color-surface-subtle) 64%, #fff);
+}
+
+.table-header-dropdown .profile-form-grid {
+  margin-bottom: 0.65rem;
+}
+
+.danger-table-dropdown {
+  border-color: color-mix(in srgb, var(--color-danger) 42%, var(--color-border-soft));
+  background: color-mix(in srgb, var(--color-danger) 10%, #fff);
+}
+
+.danger-table-dropdown .selected-file {
+  color: color-mix(in srgb, var(--color-danger) 70%, #3d241d);
+  margin-bottom: 0.55rem;
+}
+
+.table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.table-header-row h4 {
+  margin: 0;
+}
+
+.table-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 680px) {
+  .table-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .route-transition-overlay {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .route-welcome-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.danger-accent-btn {
+  border-color: color-mix(in srgb, var(--color-danger) 55%, var(--color-border-strong));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-danger) 14%, #fff), #f9ece7);
+  color: color-mix(in srgb, var(--color-danger) 78%, #3d241d);
+}
+
+.danger-accent-btn:hover {
+  border-color: var(--color-danger);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-danger) 18%, #fff), #f7e5df);
+  color: color-mix(in srgb, var(--color-danger) 90%, #2b1611);
+}
+
+img.app-img-track {
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--color-surface-muted) 72%, #fff) 20%,
+    color-mix(in srgb, var(--color-surface-subtle) 65%, #fff) 40%,
+    color-mix(in srgb, var(--color-surface-muted) 72%, #fff) 60%
+  );
+  background-size: 220% 100%;
+  animation: image-skeleton-sweep 1.1s ease-in-out infinite;
+}
+
+img.app-img-track.img-loaded,
+img.app-img-track.img-error {
+  opacity: 1;
+  background: transparent;
+  animation: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  color: var(--color-text-strong);
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, #ffffff);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(155, 123, 83, 0.28);
+  color: #2b2117;
+}
+
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-entrance {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes global-line-run {
+  from {
+    left: -38%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes image-skeleton-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Global modal behavior: freeze page, scroll modal content, sticky modal header */
+html:has(.modal-backdrop),
+body:has(.modal-backdrop) {
+  overflow: hidden !important;
+}
+
+.modal-backdrop .action-modal,
+.modal-backdrop .create-modal,
+.modal-backdrop .booking-modal,
+.modal-backdrop .amenities-modal,
+.modal-backdrop .booking-detail-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  overflow: hidden;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable both-edges;
+}
+
+.modal-backdrop {
+  overflow: hidden;
+}
+
+.modal-backdrop .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: inherit;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-soft) 85%, #fff);
+}
+
+.modal-backdrop .modal-content,
+.modal-backdrop .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable both-edges;
+}
+
+/* Global custom upload control + selected image preview */
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.upload-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  padding: 0.4rem 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-strong);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-primary) 15%, #fff), #f7f2ea);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.upload-trigger:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 22px rgba(114, 87, 56, 0.14);
+}
+
+.upload-file-name {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-soft);
+}
+
+.upload-preview-box {
+  width: min(220px, 100%);
+  height: 130px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
+  padding: 0.35rem;
+}
+
+.upload-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 8px;
+  display: block;
+}

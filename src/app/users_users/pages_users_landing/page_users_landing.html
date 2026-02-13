@@ -1,0 +1,172 @@
+<article class="landing-shell">
+  <section class="landing-hero">
+    <div class="hero-copy">
+      <p class="hero-tag">KOTS RENTAL PLATFORM</p>
+      <h2>Find Your Flat. Manage Everything In One Place.</h2>
+      <p>
+        Discover homes by area, compare rent and availability, and track bookings in a single workflow for users,
+        admins, and master operators.
+      </p>
+    </div>
+    <div class="hero-mark">
+      <img src="kots_icon.png" alt="KOTS icon" class="hero-icon" />
+    </div>
+  </section>
+
+  <section class="landing-main-grid">
+    <section class="landing-info-panel">
+      <header class="panel-head">
+        <h3>Platform Guide</h3>
+        <p>Use tabs to explore what KOTS provides.</p>
+      </header>
+
+      <nav class="panel-tab-row" aria-label="Landing info tabs">
+        <button type="button" class="panel-tab-btn" [class.active]="infoTab() === 'overview'" (click)="setInfoTab('overview')">Overview</button>
+        <button type="button" class="panel-tab-btn" [class.active]="infoTab() === 'roles'" (click)="setInfoTab('roles')">Roles</button>
+        <button type="button" class="panel-tab-btn" [class.active]="infoTab() === 'flow'" (click)="setInfoTab('flow')">Flow</button>
+        <button type="button" class="panel-tab-btn" [class.active]="infoTab() === 'stack'" (click)="setInfoTab('stack')">Stack</button>
+      </nav>
+
+      <section class="panel-content-card">
+        @if (infoTab() === 'overview') {
+          <div class="panel-content-grid two-col">
+            <article class="info-chip">
+              <h4>Search Smart</h4>
+              <p>Find flats by location, city, state, flat type, and rent range with clear availability visibility.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Track Bookings</h4>
+              <p>Create and monitor bookings with status updates and complete building/tower context.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Visual Navigation</h4>
+              <p>Move from building to tower to flat pages with linked details and image-rich cards.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Single Workspace</h4>
+              <p>Profile, search, bookings, and role switching are available from one authenticated header.</p>
+            </article>
+          </div>
+        }
+
+        @if (infoTab() === 'roles') {
+          <div class="panel-content-grid one-col">
+            <article class="info-chip">
+              <h4>User</h4>
+              <p>Register/login, manage profile and account, browse inventory, and create/view bookings.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Admin</h4>
+              <p>Manage owned buildings, towers, flats, amenities, and review booking status operations.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Master</h4>
+              <p>Create admins and oversee platform-level admin management controls.</p>
+            </article>
+          </div>
+        }
+
+        @if (infoTab() === 'flow') {
+          <div class="panel-content-grid one-col">
+            <article class="info-chip">
+              <h4>1. Discover</h4>
+              <p>User explores building and flat inventory with availability and location filters.</p>
+            </article>
+            <article class="info-chip">
+              <h4>2. Book</h4>
+              <p>Booking is created with security deposit paid and initial status set to <strong>PENDING</strong>.</p>
+            </article>
+            <article class="info-chip">
+              <h4>3. Review</h4>
+              <p>Admin processes booking and updates status to <strong>APPROVED</strong> or <strong>DECLINED</strong>.</p>
+            </article>
+            <article class="info-chip">
+              <h4>4. Track</h4>
+              <p>User follows booking status and details from the bookings section.</p>
+            </article>
+          </div>
+        }
+
+        @if (infoTab() === 'stack') {
+          <div class="panel-content-grid one-col">
+            <article class="info-chip">
+              <h4>Backend Core</h4>
+              <p>Flask APIs with JWT auth, SQLAlchemy ORM, Alembic migrations, and role-based access guards.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Media & Assets</h4>
+              <p>Optional Cloudinary integration for profile and property images with update/remove support.</p>
+            </article>
+            <article class="info-chip">
+              <h4>Frontend Pattern</h4>
+              <p>Angular standalone components, modal workflows, skeleton loading, and routed data prefetch.</p>
+            </article>
+          </div>
+        }
+      </section>
+    </section>
+
+    <section class="landing-auth-panel">
+      <header class="panel-head">
+        <h3>Account Access</h3>
+        <p>Sign in or create an account to continue.</p>
+      </header>
+
+      <nav class="panel-tab-row auth-tabs" aria-label="Auth tabs">
+        <button type="button" class="panel-tab-btn" [class.active]="activeTab() === 'login'" (click)="setActiveTab('login')">Login</button>
+        <button type="button" class="panel-tab-btn" [class.active]="activeTab() === 'register'" (click)="setActiveTab('register')">Registration</button>
+      </nav>
+
+      <section class="auth-body">
+        @if (activeTab() === 'login') {
+          <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+            @if (loginError()) {
+              <p class="error-text">{{ loginError() }}</p>
+            }
+
+            <label>
+              <span>Email</span>
+              <input type="email" formControlName="email" placeholder="name@example.com" />
+            </label>
+
+            <label>
+              <span>Password</span>
+              <input type="password" formControlName="password" placeholder="Enter password" />
+            </label>
+
+            <button type="submit" class="submit-btn" [disabled]="isLoginSubmitting()">
+              {{ isLoginSubmitting() ? 'Signing In...' : 'Login' }}
+            </button>
+          </form>
+        }
+
+        @if (activeTab() === 'register') {
+          <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="submitRegistration()">
+            @if (registerError()) {
+              <p class="error-text">{{ registerError() }}</p>
+            }
+
+            <label>
+              <span>Email</span>
+              <input type="email" formControlName="email" placeholder="name@example.com" />
+            </label>
+
+            <label>
+              <span>Password</span>
+              <input type="password" formControlName="password" placeholder="Create password" />
+            </label>
+
+            <label>
+              <span>Confirm Password</span>
+              <input type="password" formControlName="confirmPassword" placeholder="Re-enter password" />
+            </label>
+
+            <button type="submit" class="submit-btn" [disabled]="isRegisterSubmitting()">
+              {{ isRegisterSubmitting() ? 'Creating Account...' : 'Register' }}
+            </button>
+          </form>
+        }
+      </section>
+    </section>
+  </section>
+</article>

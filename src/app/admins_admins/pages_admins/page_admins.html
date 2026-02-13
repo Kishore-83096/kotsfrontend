@@ -1,0 +1,270 @@
+<article class="admin-page-card">
+  <header class="page-header">
+    <div>
+      <h2>Admin Buildings</h2>
+      <p>Operations dashboard for inventory and booking controls.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="action-btn ghost" (click)="openBookingsModal()">Bookings</button>
+      <button type="button" class="action-btn primary" (click)="openCreateModal()">Create Building</button>
+    </div>
+  </header>
+
+  @if (actionMessage()) {
+    <p class="success-text">{{ actionMessage() }}</p>
+  }
+
+  @if (pageError()) {
+    <p class="error-text">{{ pageError() }}</p>
+  }
+
+  @if (!isLoadingBuildings() && buildingsData().length === 0 && !pageError()) {
+    <section class="empty-state">
+      <p>No building records were found.</p>
+    </section>
+  }
+
+  @if (isLoadingBuildings()) {
+    <section class="buildings-list">
+      @for (item of [1, 2, 3]; track item) {
+        <article class="building-card">
+          <div class="skeleton-block skeleton-image"></div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </article>
+      }
+    </section>
+  }
+
+  <section class="buildings-list">
+    @for (building of buildingsData(); track building.id) {
+      <article class="building-card">
+        @if (building.picture_url) {
+          <img class="building-image clickable-image" [src]="building.picture_url" [alt]="building.name + ' picture'" (click)="openImagePreview(building.picture_url)" />
+        } @else {
+          <div class="building-image-placeholder">No Image</div>
+        }
+
+        <div class="building-content">
+          <h3>{{ building.name }}</h3>
+          <p>{{ building.address }}, {{ building.city }}, {{ building.state }}, {{ building.pincode }}</p>
+          <div class="building-meta-row">
+            <span class="admin-chip">Towers: {{ building.total_towers }}</span>
+            <span class="admin-chip">Building ID: {{ building.id }}</span>
+          </div>
+          <button type="button" class="action-btn primary" (click)="openBuildingDetail(building.id)">Manage Building</button>
+        </div>
+      </article>
+    }
+  </section>
+</article>
+
+@if (isBookingsModalOpen()) {
+  <section class="modal-backdrop" (click)="closeBookingsModal()">
+    <article class="create-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Admin Bookings</h3>
+        <div class="header-actions">
+          <button type="button" class="action-btn ghost" (click)="closeBookingsModal()">Close</button>
+        </div>
+      </header>
+      <div class="modal-content">
+
+      @if (bookingsModalError()) {
+        <p class="error-text">{{ bookingsModalError() }}</p>
+      }
+      @if (bookingDetailError()) {
+        <p class="error-text">{{ bookingDetailError() }}</p>
+      }
+
+      @if (isLoadingBookings()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </div>
+      }
+
+      @if (!isLoadingBookings() && bookingsData().length === 0 && !bookingsModalError()) {
+        <p class="empty-text">No bookings found.</p>
+      }
+
+      <div class="bookings-grid">
+        @for (booking of bookingsData(); track booking.id) {
+          <article class="booking-card">
+            <div class="booking-content">
+              <h3>Booking #{{ booking.id }}</h3>
+              <p><strong>Status:</strong> {{ booking.status }}</p>
+              <p><strong>User ID:</strong> {{ booking.user_id }}</p>
+              <p><strong>Building:</strong> {{ booking.building.name }} ({{ booking.building.id }})</p>
+              <p><strong>Tower:</strong> {{ booking.tower.name }} ({{ booking.tower.id }})</p>
+              <p><strong>Flat:</strong> {{ booking.flat.flat_number }} ({{ booking.flat.id }})</p>
+              <p><strong>Created At:</strong> {{ booking.created_at }}</p>
+              <button type="button" class="action-btn primary" (click)="viewBooking(booking.id)" [disabled]="isLoadingBookingDetail()">
+                {{ isLoadingBookingDetail() ? 'Loading...' : 'View Booking' }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+      </div>
+
+    </article>
+  </section>
+}
+
+@if (isBookingDetailModalOpen()) {
+  <section class="modal-backdrop" (click)="closeBookingDetailModal()">
+    <article class="create-modal booking-detail-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Booking Detail</h3>
+        <button type="button" class="action-btn ghost" (click)="closeBookingDetailModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (bookingDetailError()) {
+        <p class="error-text">{{ bookingDetailError() }}</p>
+      }
+
+      @if (isLoadingBookingDetail()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </div>
+      }
+
+      @if (!isLoadingBookingDetail() && selectedBooking(); as booking) {
+        <section class="booking-detail-body">
+          <header class="booking-detail-top">
+            <h3>Booking #{{ booking.id }}</h3>
+            <span class="booking-status-badge" [class.pending]="booking.status === 'PENDING'" [class.approved]="booking.status === 'APPROVED'" [class.declined]="booking.status === 'DECLINED'">
+              {{ booking.status }}
+            </span>
+          </header>
+
+          <div class="booking-detail-grid">
+            <article class="booking-info-card">
+              <h4>Booking Info</h4>
+              <p><span>User ID</span><strong>{{ booking.user_id }}</strong></p>
+              <p><span>Security Deposit</span><strong>{{ booking.security_deposit || '-' }}</strong></p>
+              <p><span>Paid</span><strong>{{ booking.paid ? 'Yes' : 'No' }}</strong></p>
+              <p><span>Created At</span><strong>{{ booking.created_at }}</strong></p>
+            </article>
+
+            <article class="booking-info-card">
+              <h4>Property Info</h4>
+              <p><span>Building</span><strong>{{ booking.building.name }} (#{{ booking.building.id }})</strong></p>
+              <p><span>Tower</span><strong>{{ booking.tower.name }} (#{{ booking.tower.id }})</strong></p>
+              <p><span>Flat</span><strong>{{ booking.flat.flat_number }} (#{{ booking.flat.id }})</strong></p>
+            </article>
+          </div>
+
+          <section class="booking-status-panel">
+            <div class="form-grid">
+              <label>
+                <span>Update Status</span>
+                <select [value]="updateBookingStatus()" (change)="setUpdateBookingStatus($any($event.target).value)" [disabled]="isUpdatingBookingStatus()">
+                  <option value="PENDING">PENDING</option>
+                  <option value="APPROVED">APPROVED</option>
+                  <option value="DECLINED">DECLINED</option>
+                </select>
+              </label>
+            </div>
+
+            <button type="button" class="action-btn primary" (click)="updateSelectedBookingStatus()" [disabled]="isUpdatingBookingStatus()">
+              {{ isUpdatingBookingStatus() ? 'Updating...' : 'Update Booking Status' }}
+            </button>
+          </section>
+        </section>
+      }
+      </div>
+    </article>
+  </section>
+}
+
+@if (isCreateModalOpen()) {
+  <section class="modal-backdrop" (click)="closeCreateModal()">
+    <article class="create-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Create Building</h3>
+        <button type="button" class="action-btn ghost" (click)="closeCreateModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (createModalError()) {
+        <p class="error-text">{{ createModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input type="text" [value]="createName()" (input)="setCreateName($any($event.target).value)" [disabled]="isCreatingBuilding()" />
+        </label>
+        <label>
+          <span>Address</span>
+          <input
+            type="text"
+            [value]="createAddress()"
+            (input)="setCreateAddress($any($event.target).value)"
+            [disabled]="isCreatingBuilding()"
+          />
+        </label>
+        <label>
+          <span>City</span>
+          <input type="text" [value]="createCity()" (input)="setCreateCity($any($event.target).value)" [disabled]="isCreatingBuilding()" />
+        </label>
+        <label>
+          <span>State</span>
+          <input type="text" [value]="createState()" (input)="setCreateState($any($event.target).value)" [disabled]="isCreatingBuilding()" />
+        </label>
+        <label>
+          <span>Pincode</span>
+          <input
+            type="text"
+            [value]="createPincode()"
+            (input)="setCreatePincode($any($event.target).value)"
+            [disabled]="isCreatingBuilding()"
+          />
+        </label>
+        <label>
+          <span>Total Towers (optional)</span>
+          <input
+            type="number"
+            [value]="createTotalTowers()"
+            (input)="setCreateTotalTowers($any($event.target).value)"
+            [disabled]="isCreatingBuilding()"
+          />
+        </label>
+        <label class="file-field">
+          <span>Building Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-create-building-picture">Choose Picture</label>
+            <input
+              id="admin-create-building-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onCreatePictureFileSelected($event)"
+              [disabled]="isCreatingBuilding()"
+            />
+          </div>
+          @if (selectedCreatePictureFile(); as selectedFile) {
+            <small class="upload-file-name">Selected: {{ selectedFile.name }}</small>
+          }
+          @if (selectedCreatePicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected building preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="createBuilding()" [disabled]="isCreatingBuilding()">
+        {{ isCreatingBuilding() ? 'Creating...' : 'Create Building' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}

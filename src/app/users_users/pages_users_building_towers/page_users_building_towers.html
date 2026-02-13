@@ -1,0 +1,103 @@
+<article class="towers-page">
+  <header class="page-header">
+    <div class="page-header-identity">
+      @if (selectedBuilding(); as building) {
+        <div class="page-header-media">
+          @if (building.picture_url) {
+            <button
+              type="button"
+              class="building-media-card"
+              (click)="openImagePreview(building.picture_url)"
+              aria-label="Open preview for {{ building.name }}"
+            >
+              <img class="building-image clickable-image" [src]="building.picture_url" [alt]="building.name + ' picture'" />
+              <div class="building-hover-overlay">
+                <h4>{{ building.name }}</h4>
+                <p>{{ building.full_address ?? (building.address + ', ' + building.city + ', ' + building.state + ', ' + building.pincode) }}</p>
+                <div class="building-overlay-grid">
+                  <p><span>Towers</span><strong>{{ building.towers_count ?? building.total_towers ?? 'N/A' }}</strong></p>
+                  <p><span>Total Flats</span><strong>{{ building.flats_count ?? 'N/A' }}</strong></p>
+                  <p><span>Available Flats</span><strong>{{ building.available_flats_count ?? 'N/A' }}</strong></p>
+                  <p><span>Amenities</span><strong>{{ amenitiesText(building) }}</strong></p>
+                </div>
+              </div>
+            </button>
+          } @else {
+            <div class="building-image-placeholder">No Image</div>
+          }
+        </div>
+      }
+
+      <div class="page-header-main">
+        <h2>{{ selectedBuilding()?.name ?? 'Building' }} Towers</h2>
+        <p>Browse tower inventory and availability for this building.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="action-btn ghost" routerLink="/home">Back To Buildings</a>
+    </div>
+  </header>
+
+  @if (error()) {
+    <section class="state-card error">
+      <p>{{ error() }}</p>
+    </section>
+  }
+
+  @if (towersData().length === 0 && !isLoading() && !error()) {
+    <section class="state-card">
+      <p>No towers found for this building.</p>
+    </section>
+  }
+
+  @if (isLoading()) {
+    <section class="towers-list">
+      @for (item of [1, 2, 3]; track item) {
+        <article class="tower-card">
+          <div class="skeleton-block skeleton-image"></div>
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </div>
+        </article>
+      }
+    </section>
+  }
+
+  <header class="section-header towers-section-header">
+    <h3>Towers</h3>
+    <p>Total Towers: {{ selectedBuilding()?.towers_count ?? selectedBuilding()?.total_towers ?? towersData().length }}</p>
+  </header>
+
+  <section class="towers-list">
+    @for (tower of towersData(); track tower.id) {
+      <article class="tower-card">
+        @if (tower.picture_url) {
+          <img class="tower-image clickable-image" [src]="tower.picture_url" [alt]="tower.name + ' tower picture'" (click)="openImagePreview(tower.picture_url); $event.stopPropagation()" />
+        } @else {
+          <div class="tower-image-placeholder">No Image</div>
+        }
+
+        <div
+          class="tower-content"
+          role="button"
+          tabindex="0"
+          (click)="openTowerDetail(tower.id)"
+          (keydown.enter)="openTowerDetail(tower.id)"
+          (keydown.space)="openTowerDetail(tower.id); $event.preventDefault()"
+          aria-label="Open details for tower {{ tower.name }}"
+        >
+          <h3>{{ tower.name }}</h3>
+          <div class="tower-meta-table">
+            <p><span>Tower ID</span><strong>{{ tower.id }}</strong></p>
+            <p><span>Floors</span><strong>{{ tower.floors }}</strong></p>
+            <p><span>Total Flats</span><strong>{{ tower.total_flats ?? 'N/A' }}</strong></p>
+            <p><span>Current Added Flats</span><strong>{{ tower.flats_count ?? 'N/A' }}</strong></p>
+            <p><span>Available Flats</span><strong>{{ tower.available_flats_count ?? 'N/A' }}</strong></p>
+          </div>
+        </div>
+      </article>
+    }
+  </section>
+</article>

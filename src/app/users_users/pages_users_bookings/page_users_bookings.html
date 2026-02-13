@@ -1,0 +1,115 @@
+<article class="bookings-page">
+  <header class="page-header">
+    <div>
+      <h2>My Bookings</h2>
+    </div>
+    <div class="header-actions">
+      <a class="action-btn ghost" routerLink="/home">Back To Home</a>
+    </div>
+  </header>
+
+  @if (error()) {
+    <section class="state-card error">
+      <p>{{ error() }}</p>
+    </section>
+  }
+
+  @if (bookingsData().length === 0 && !isLoading() && !error()) {
+    <section class="state-card">
+      <p>No bookings found.</p>
+    </section>
+  }
+
+  @if (isLoading()) {
+    <section class="bookings-grid">
+      @for (item of [1, 2, 3]; track item) {
+        <article class="booking-card-home">
+          <div class="skeleton-block skeleton-image"></div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </article>
+      }
+    </section>
+  }
+
+  <section class="bookings-grid">
+    @for (booking of bookingsData(); track booking.id) {
+      <article class="booking-card-home">
+        @if (flatPreviewForBooking(booking.id)?.flat?.picture_url; as flatPictureUrl) {
+          <img class="booking-image" [src]="flatPictureUrl" alt="Flat image" />
+        } @else {
+          <div class="booking-image booking-image-placeholder">No Flat Image</div>
+        }
+
+        <div class="booking-content">
+          <h3>{{ booking.flat?.flat_number ?? 'Booked Flat' }}</h3>
+          <p class="booking-address">{{ booking.building_full_address ?? 'Address not available' }}</p>
+
+          <div class="booking-meta-table">
+            <p><span>Status</span><strong>{{ booking.status }}</strong></p>
+            <p><span>Building</span><strong>{{ booking.building?.name ?? 'N/A' }}</strong></p>
+            <p><span>Tower</span><strong>{{ booking.tower?.name ?? 'N/A' }}</strong></p>
+            <p><span>Rent</span><strong>{{ flatPreviewForBooking(booking.id)?.flat?.rent_amount ?? 'N/A' }}</strong></p>
+            <p><span>Deposit</span><strong>{{ booking.security_deposit ?? flatPreviewForBooking(booking.id)?.flat?.security_deposit ?? 'N/A' }}</strong></p>
+            <p><span>Paid</span><strong>{{ booking.paid === true ? 'Yes' : 'No' }}</strong></p>
+            <p><span>Manager</span><strong>{{ booking.manager?.name ?? 'N/A' }}</strong></p>
+            <p><span>Manager Phone</span><strong>{{ booking.manager?.phone ?? 'N/A' }}</strong></p>
+          </div>
+
+          <button type="button" class="view-btn" (click)="openBookingDetailModal(booking.id)">View Details</button>
+        </div>
+      </article>
+    }
+  </section>
+</article>
+
+@if (isBookingModalOpen()) {
+  <section class="modal-backdrop" (click)="closeBookingDetailModal()">
+    <article class="booking-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Booking Details</h3>
+        <button type="button" class="action-btn ghost" (click)="closeBookingDetailModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (isLoadingBookingDetail()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-image"></div>
+        </div>
+      }
+
+      @if (bookingDetailError()) {
+        <p class="error-text">{{ bookingDetailError() }}</p>
+      }
+
+      @if (bookingDetailResponse()?.data; as booking) {
+        @if (bookingModalFlatDetail()?.flat?.picture_url; as modalFlatPicture) {
+          <img class="modal-flat-image" [src]="modalFlatPicture" alt="Flat image" />
+        } @else {
+          <div class="modal-flat-image modal-flat-image-placeholder">No Flat Image</div>
+        }
+
+        <div class="details-grid">
+          <p><strong>Status:</strong> {{ booking.status }}</p>
+          <p><strong>Flat:</strong> {{ booking.flat?.flat_number ?? 'N/A' }}</p>
+          <p><strong>Tower:</strong> {{ booking.tower?.name ?? 'N/A' }}</p>
+          <p><strong>Building:</strong> {{ booking.building?.name ?? 'N/A' }}</p>
+          <p><strong>Manager:</strong> {{ booking.manager?.name ?? 'N/A' }}</p>
+          <p><strong>Manager Phone:</strong> {{ booking.manager?.phone ?? 'N/A' }}</p>
+          <p><strong>Rent:</strong> {{ bookingModalFlatDetail()?.flat?.rent_amount ?? 'N/A' }}</p>
+          <p><strong>Security Deposit:</strong> {{ booking.security_deposit ?? bookingModalFlatDetail()?.flat?.security_deposit ?? 'N/A' }}</p>
+          <p><strong>Paid:</strong> {{ booking.paid === true ? 'Yes' : 'No' }}</p>
+          <p><strong>Address:</strong> {{ booking.building_full_address ?? 'N/A' }}</p>
+          <p><strong>Created At:</strong> {{ booking.created_at ?? 'N/A' }}</p>
+        </div>
+        <button type="button" class="view-btn" (click)="openFlatDetailsFromBooking(booking)">
+          View Flat Details
+        </button>
+      }
+      </div>
+    </article>
+  </section>
+}

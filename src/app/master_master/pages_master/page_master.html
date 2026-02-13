@@ -1,0 +1,157 @@
+<article class="master-page">
+  <header class="page-header">
+    <div>
+      <h2>Master Admin Control</h2>
+      <p>Manage admin accounts from one place.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="action-btn ghost" (click)="loadAdmins(currentPage())" [disabled]="isLoadingAdmins()">
+        {{ isLoadingAdmins() ? 'Refreshing...' : 'Refresh Admins' }}
+      </button>
+      <button type="button" class="action-btn primary" (click)="openCreateAdminModal()">Create Admin</button>
+    </div>
+  </header>
+
+  @if (pageError()) {
+    <section class="state-card error">
+      <p>{{ pageError() }}</p>
+    </section>
+  }
+
+  @if (!pageError() && admins().length === 0 && !isLoadingAdmins()) {
+    <section class="state-card">
+      <p>No admins found.</p>
+    </section>
+  }
+
+  @if (isLoadingAdmins()) {
+    <section class="admins-section">
+      <div class="admins-list">
+        @for (item of [1, 2, 3]; track item) {
+          <article class="admin-card">
+            <div class="skeleton-block skeleton-line lg"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="admins-section">
+    <header class="section-header admins-section-header">
+      <h3>Admins</h3>
+      <p>Total: {{ adminsResponse()?.data?.total ?? 0 }}</p>
+    </header>
+
+    <div class="admins-list">
+      @for (admin of admins(); track admin.id) {
+        <article
+          class="admin-card"
+          role="button"
+          tabindex="0"
+          (click)="openAdminDetailModal(admin.id)"
+          (keydown.enter)="openAdminDetailModal(admin.id)"
+          (keydown.space)="openAdminDetailModal(admin.id); $event.preventDefault()"
+          [attr.aria-label]="'Open details for admin ' + admin.email"
+        >
+          <h4>{{ admin.email }}</h4>
+          <div class="admin-meta-table">
+            <p><span>Admin ID</span><strong>{{ admin.id }}</strong></p>
+            <p><span>Role</span><strong>{{ admin.role }}</strong></p>
+            <p class="meta-full"><span>Created At</span><strong>{{ admin.created_at ?? 'N/A' }}</strong></p>
+          </div>
+        </article>
+      }
+    </div>
+
+    <footer class="pagination-row">
+      <button type="button" class="action-btn ghost" (click)="goPrev()" [disabled]="!canGoPrev() || isLoadingAdmins()">Previous</button>
+      <p>Page {{ currentPage() }} of {{ totalPages() }}</p>
+      <button type="button" class="action-btn ghost" (click)="goNext()" [disabled]="!canGoNext() || isLoadingAdmins()">Next</button>
+    </footer>
+  </section>
+</article>
+
+@if (isCreateAdminModalOpen()) {
+  <section class="modal-backdrop" (click)="closeCreateAdminModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Create Admin</h3>
+        <button type="button" class="action-btn ghost" (click)="closeCreateAdminModal()">Close</button>
+      </header>
+
+      <div class="modal-content">
+        @if (createAdminError()) {
+          <p class="error-text">{{ createAdminError() }}</p>
+        }
+        @if (createAdminSuccess()) {
+          <p class="success-text">{{ createAdminSuccess() }}</p>
+        }
+
+        <div class="form-grid">
+          <label>
+            <span>Email</span>
+            <input
+              type="email"
+              [value]="createAdminEmail()"
+              (input)="setCreateAdminEmail($any($event.target).value)"
+              [disabled]="isCreatingAdmin()"
+              placeholder="admin@example.com"
+            />
+          </label>
+          <label>
+            <span>Password</span>
+            <input
+              type="password"
+              [value]="createAdminPassword()"
+              (input)="setCreateAdminPassword($any($event.target).value)"
+              [disabled]="isCreatingAdmin()"
+              placeholder="Enter password"
+            />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="action-btn primary" (click)="createAdmin()" [disabled]="isCreatingAdmin()">
+            {{ isCreatingAdmin() ? 'Creating...' : 'Create Admin' }}
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isAdminDetailModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAdminDetailModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Admin Details</h3>
+        <button type="button" class="action-btn ghost" (click)="closeAdminDetailModal()">Close</button>
+      </header>
+
+      <div class="modal-content">
+        @if (isLoadingAdminDetail()) {
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </div>
+        }
+
+        @if (adminDetailError()) {
+          <p class="error-text">{{ adminDetailError() }}</p>
+        }
+
+        @if (!isLoadingAdminDetail() && !adminDetailError() && adminDetailResponse()?.data; as detail) {
+          <div class="admin-detail-table">
+            <p><span>Admin ID</span><strong>{{ detail.id }}</strong></p>
+            <p><span>Email</span><strong>{{ detail.email }}</strong></p>
+            <p><span>Role</span><strong>{{ detail.role }}</strong></p>
+            <p><span>Created At</span><strong>{{ detail.created_at ?? 'N/A' }}</strong></p>
+          </div>
+        }
+      </div>
+    </article>
+  </section>
+}

@@ -1,0 +1,34 @@
+<article class="health-page-card">
+  <header class="page-header">
+    <h2>Users API Health</h2>
+    <p>Flask API base URL: <code>{{ apiBaseUrl() }}</code></p>
+    <button type="button" (click)="runHealthCheck()" [disabled]="isChecking()">
+      {{ isChecking() ? 'Checking...' : 'Run Users Health Check' }}
+    </button>
+    @if (checkedAt()) {
+      <p class="checked-at">Last checked: {{ checkedAt() }}</p>
+    }
+    @if (pageError()) {
+      <p class="error">{{ pageError() }}</p>
+    }
+  </header>
+
+  @if (isChecking()) {
+    <section class="health-details">
+      <div class="skeleton-block skeleton-line lg"></div>
+      <div class="skeleton-block skeleton-line"></div>
+      <div class="skeleton-block skeleton-line"></div>
+    </section>
+  }
+
+  @if (healthResult(); as result) {
+    <section class="health-details" [class.healthy]="result.isHealthy" [class.unhealthy]="!result.isHealthy">
+      <p><strong>Endpoint:</strong> <code>{{ result.endpoint }}</code></p>
+      <p><strong>HTTP Status:</strong> {{ result.httpStatus ?? 'N/A' }}</p>
+      <p><strong>Success:</strong> {{ result.isHealthy }}</p>
+      <p><strong>Message:</strong> {{ result.message }}</p>
+      <p><strong>Service:</strong> {{ result.payload?.data?.service ?? 'N/A' }}</p>
+      <p><strong>Payload Size:</strong> {{ result.payload?.size ?? 'N/A' }}</p>
+    </section>
+  }
+</article>

@@ -1,0 +1,44 @@
+:root {
+  --font-sans: 'DM Sans', 'Manrope', 'Segoe UI', sans-serif;
+  --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Consolas', 'Courier New', monospace;
+
+  --color-bg: #f3efe8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9f5ee;
+  --color-surface-subtle: #f2ebe0;
+  --color-text: #2d271f;
+  --color-text-soft: #74695b;
+  --color-text-strong: #201b14;
+  --color-border: #d9cebf;
+  --color-border-soft: #e4dbcf;
+  --color-border-strong: #cbbca8;
+
+  --color-primary: #9b7b53;
+  --color-primary-strong: #7b6041;
+  --color-primary-hover: #b08d61;
+  --color-primary-soft: rgba(155, 123, 83, 0.16);
+
+  --color-secondary: #394838;
+  --color-secondary-soft: rgba(57, 72, 56, 0.14);
+
+  --color-danger: #b54d3d;
+  --color-danger-strong: #8f382d;
+  --color-danger-soft: rgba(181, 77, 61, 0.14);
+
+  --color-success: #496746;
+  --color-success-soft: rgba(73, 103, 70, 0.14);
+  --color-success-border: rgba(73, 103, 70, 0.35);
+  --color-danger-border: rgba(181, 77, 61, 0.4);
+
+  --radius-sm: 0.45rem;
+  --radius-md: 0.9rem;
+  --radius-lg: 20px;
+  --radius-xl: 30px;
+  --shadow-card: 0 18px 48px rgba(43, 34, 24, 0.12);
+  --shadow-soft: 0 12px 30px rgba(68, 52, 34, 0.1);
+  --shadow-soft-hover: 0 24px 60px rgba(54, 42, 30, 0.18);
+  --gradient-page: radial-gradient(circle at 16% 10%, rgba(181, 154, 118, 0.22), transparent 38%),
+    radial-gradient(circle at 90% 15%, rgba(241, 225, 201, 0.5), transparent 32%),
+    linear-gradient(180deg, #f7f3ed 0%, #f1e8dc 100%);
+}

@@ -1,0 +1,32 @@
+<article class="auth-card">
+  <h2>Users Login</h2>
+  <p>Login with your registered credentials. On success, you will be redirected to Home.</p>
+
+  <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="auth-form">
+    <label>
+      Email
+      <input type="email" formControlName="email" placeholder="user@example.com" />
+    </label>
+    @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+      <p class="field-error">Please enter a valid email.</p>
+    }
+
+    <label>
+      Password
+      <input type="password" formControlName="password" placeholder="Your password" />
+    </label>
+    @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+      <p class="field-error">Password must be at least 6 characters.</p>
+    }
+
+    @if (formError()) {
+      <p class="form-error">{{ formError() }}</p>
+    }
+
+    <button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Signing in...' : 'Login' }}
+    </button>
+  </form>
+
+  <p class="alt-link">New user? <a routerLink="/users/register">Go to Registration</a></p>
+</article>

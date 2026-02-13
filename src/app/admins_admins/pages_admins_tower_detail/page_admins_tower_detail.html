@@ -1,0 +1,514 @@
+<article class="tower-detail-card">
+  <header class="page-header">
+    <div>
+      <h2>Admin Tower Detail</h2>
+    </div>
+    <div class="header-actions">
+      <a class="action-btn ghost" [routerLink]="['/admins/buildings', buildingId()]">Back To Building</a>
+      <button type="button" class="action-btn primary" (click)="openUpdateTowerModal()" [disabled]="isLoading()">Update Tower</button>
+      <button type="button" class="action-btn primary" (click)="openAddFlatModal()" [disabled]="isLoading()">Add Flat</button>
+      <button type="button" class="action-btn danger" (click)="deleteTower()" [disabled]="isDeletingTower() || isLoading()">
+        {{ isDeletingTower() ? 'Deleting...' : 'Delete Tower' }}
+      </button>
+    </div>
+  </header>
+
+  @if (pageError()) {
+    <p class="error-text">{{ pageError() }}</p>
+  }
+  @if (pageMessage()) {
+    <p class="success-text">{{ pageMessage() }}</p>
+  }
+
+  @if (isLoading() || isLoadingFlats()) {
+    <section class="detail-grid">
+      <article class="tower-overview-card">
+        <div class="skeleton-block skeleton-image"></div>
+        <div class="detail-panel">
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </div>
+      </article>
+    </section>
+  }
+
+  @if (towerResponse()?.data; as tower) {
+    <section class="detail-grid">
+      <article class="tower-overview-card">
+        @if (tower.picture_url) {
+          <img class="tower-image clickable-image" [src]="tower.picture_url" [alt]="tower.name + ' picture'" (click)="openImagePreview(tower.picture_url)" />
+        } @else {
+          <div class="tower-image-placeholder">No Image</div>
+        }
+
+        <article class="detail-panel">
+          <h3>{{ tower.name }}</h3>
+          <div class="tower-meta-row">
+            <span class="admin-chip">Tower ID: {{ tower.id }}</span>
+            <span class="admin-chip">Building ID: {{ tower.building_id }}</span>
+            <span class="admin-chip">Building: {{ tower.building_name ?? '-' }}</span>
+            <span class="admin-chip">Floors: {{ tower.floors }}</span>
+            <span class="admin-chip">Total Flats: {{ tower.total_flats }}</span>
+          </div>
+          <p class="meta-line"><strong>Created At:</strong> {{ tower.created_at }}</p>
+        </article>
+      </article>
+    </section>
+  }
+
+  <section class="flats-section">
+    <header class="flats-header">
+      <h3>Tower Flats</h3>
+    </header>
+
+    @if (flatsError()) {
+      <p class="error-text">{{ flatsError() }}</p>
+    }
+
+    @if (!isLoadingFlats() && flatsData().length === 0 && !flatsError()) {
+      <p class="empty-text">No flats found for this tower.</p>
+    }
+
+    <div class="flats-list">
+      @for (flat of flatsData(); track flat.id) {
+        <article class="flat-card">
+          @if (flat.picture_url) {
+            <img class="flat-image clickable-image" [src]="flat.picture_url" [alt]="flat.flat_number + ' picture'" (click)="openImagePreview(flat.picture_url)" />
+          } @else {
+            <div class="flat-image-placeholder">No Image</div>
+          }
+
+          <div class="flat-content">
+            <h4>{{ flat.flat_number }}</h4>
+            <div class="flat-meta-row">
+              <span class="admin-chip">Flat ID: {{ flat.id }}</span>
+              <span class="admin-chip">Floor: {{ flat.floor_number }}</span>
+              <span class="admin-chip">BHK: {{ flat.bhk_type }}</span>
+              <span class="admin-chip">Area: {{ flat.area_sqft }} sqft</span>
+              <span class="admin-chip">Rent: {{ flat.rent_amount }}</span>
+              <span class="admin-chip">Deposit: {{ flat.security_deposit }}</span>
+              <span class="admin-chip">Available: {{ flat.is_available ? 'Yes' : 'No' }}</span>
+            </div>
+            <div class="flat-actions">
+              <button type="button" class="action-btn ghost" (click)="openLinkAmenitiesModal(flat.id)">Link Amenities</button>
+              <button type="button" class="action-btn primary" (click)="openUpdateFlatModal(flat.id)">Update Flat</button>
+              <button
+                type="button"
+                class="action-btn danger"
+                (click)="deleteFlat(flat.id)"
+                [disabled]="deletingFlatId() === flat.id"
+              >
+                {{ deletingFlatId() === flat.id ? 'Deleting...' : 'Delete Flat' }}
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+</article>
+
+@if (isUpdateTowerModalOpen()) {
+  <section class="modal-backdrop" (click)="closeUpdateTowerModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Update Tower</h3>
+        <button type="button" class="action-btn ghost" (click)="closeUpdateTowerModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (updateTowerModalError()) {
+        <p class="error-text">{{ updateTowerModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input
+            type="text"
+            maxlength="50"
+            [value]="updateTowerName()"
+            (input)="setUpdateTowerName($any($event.target).value)"
+            [disabled]="isUpdatingTower()"
+          />
+        </label>
+        <label>
+          <span>Floors</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [value]="updateTowerFloors()"
+            (input)="setUpdateTowerFloors($any($event.target).value)"
+            [disabled]="isUpdatingTower()"
+          />
+        </label>
+        <label>
+          <span>Total Flats (optional)</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [value]="updateTowerTotalFlats()"
+            (input)="setUpdateTowerTotalFlats($any($event.target).value)"
+            [disabled]="isUpdatingTower()"
+          />
+        </label>
+        <label class="file-field">
+          <span>Tower Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-update-tower-picture">Choose Picture</label>
+            <input
+              id="admin-update-tower-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onUpdateTowerPictureSelected($event)"
+              [disabled]="isUpdatingTower()"
+            />
+          </div>
+          @if (updateTowerPictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (updateTowerPicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected tower preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="updateTower()" [disabled]="isUpdatingTower()">
+        {{ isUpdatingTower() ? 'Updating...' : 'Update Tower' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isViewFlatModalOpen()) {
+  <section class="modal-backdrop" (click)="closeViewFlatModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Flat Details</h3>
+        <button type="button" class="action-btn ghost" (click)="closeViewFlatModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (flatDetailModalError()) {
+        <p class="error-text">{{ flatDetailModalError() }}</p>
+      }
+
+      @if (isLoadingFlatDetail()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-image"></div>
+        </div>
+      }
+
+      @if (!isLoadingFlatDetail() && flatDetail(); as flat) {
+        <section class="detail-grid flat-detail-grid">
+          @if (flat.picture_url) {
+            <img class="tower-image clickable-image" [src]="flat.picture_url" [alt]="flat.flat_number + ' picture'" (click)="openImagePreview(flat.picture_url)" />
+          } @else {
+            <div class="tower-image-placeholder">No Image</div>
+          }
+
+          <article class="detail-panel">
+            <h3>{{ flat.flat_number }}</h3>
+            <p><strong>Flat ID:</strong> {{ flat.id }}</p>
+            <p><strong>Tower ID:</strong> {{ flat.tower_id }}</p>
+            <p><strong>Floor:</strong> {{ flat.floor_number }}</p>
+            <p><strong>BHK:</strong> {{ flat.bhk_type }}</p>
+            <p><strong>Area:</strong> {{ flat.area_sqft }} sqft</p>
+            <p><strong>Rent:</strong> {{ flat.rent_amount }}</p>
+            <p><strong>Deposit:</strong> {{ flat.security_deposit }}</p>
+            <p><strong>Available:</strong> {{ flat.is_available ? 'Yes' : 'No' }}</p>
+            <p><strong>Created At:</strong> {{ flat.created_at }}</p>
+          </article>
+        </section>
+      }
+      </div>
+    </article>
+  </section>
+}
+
+@if (isLinkAmenitiesModalOpen()) {
+  <section class="modal-backdrop" (click)="closeLinkAmenitiesModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Link Amenities To Flat</h3>
+        <button type="button" class="action-btn ghost" (click)="closeLinkAmenitiesModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      <p class="section-subtitle">
+        Existing linked amenities are pre-selected. Uncheck to remove, check to add.
+      </p>
+
+      @if (linkAmenitiesModalError()) {
+        <p class="error-text">{{ linkAmenitiesModalError() }}</p>
+      }
+
+      @if (isLoadingLinkAmenities()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </div>
+      }
+
+      @if (!isLoadingLinkAmenities() && linkAmenitiesList().length === 0) {
+        <p class="empty-text">No building amenities available to link.</p>
+      }
+
+      @if (!isLoadingLinkAmenities() && linkAmenitiesList().length > 0) {
+        <p class="section-subtitle">
+          <strong>Currently selected:</strong>
+          {{ selectedAmenityNames().length ? selectedAmenityNames().join(', ') : 'None' }}
+        </p>
+        <div class="form-grid">
+          @for (amenity of linkAmenitiesList(); track amenity.id) {
+            <label>
+              <span>
+                <input
+                  type="checkbox"
+                  [checked]="isAmenitySelected(amenity.id)"
+                  (change)="toggleAmenitySelection(amenity.id, $any($event.target).checked)"
+                  [disabled]="isLinkingAmenities()"
+                />
+                {{ amenity.name }} (ID: {{ amenity.id }})
+              </span>
+            </label>
+          }
+        </div>
+      }
+
+      <button type="button" class="action-btn primary" (click)="linkSelectedAmenitiesToFlat()" [disabled]="isLinkingAmenities() || isLoadingLinkAmenities()">
+        {{ isLinkingAmenities() ? 'Linking...' : 'Link Selected Amenities' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isUpdateFlatModalOpen()) {
+  <section class="modal-backdrop" (click)="closeUpdateFlatModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Update Flat</h3>
+        <button type="button" class="action-btn ghost" (click)="closeUpdateFlatModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (updateFlatModalError()) {
+        <p class="error-text">{{ updateFlatModalError() }}</p>
+      }
+
+      @if (isLoadingFlatDetail()) {
+        <div>
+          <div class="skeleton-block skeleton-line lg"></div>
+          <div class="skeleton-block skeleton-line"></div>
+          <div class="skeleton-block skeleton-line"></div>
+        </div>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Flat Number</span>
+          <input type="text" [value]="updateFlatNumber()" (input)="setUpdateFlatNumber($any($event.target).value)" [disabled]="isUpdatingFlat()" />
+        </label>
+        <label>
+          <span>Floor Number</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [value]="updateFlatFloorNumber()"
+            (input)="setUpdateFlatFloorNumber($any($event.target).value)"
+            [disabled]="isUpdatingFlat()"
+          />
+        </label>
+        <label>
+          <span>BHK Type</span>
+          <input type="text" [value]="updateFlatBhkType()" (input)="setUpdateFlatBhkType($any($event.target).value)" [disabled]="isUpdatingFlat()" />
+        </label>
+        <label>
+          <span>Area Sqft</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [value]="updateFlatAreaSqft()"
+            (input)="setUpdateFlatAreaSqft($any($event.target).value)"
+            [disabled]="isUpdatingFlat()"
+          />
+        </label>
+        <label>
+          <span>Rent Amount</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [value]="updateFlatRentAmount()"
+            (input)="setUpdateFlatRentAmount($any($event.target).value)"
+            [disabled]="isUpdatingFlat()"
+          />
+        </label>
+        <label>
+          <span>Security Deposit</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [value]="updateFlatSecurityDeposit()"
+            (input)="setUpdateFlatSecurityDeposit($any($event.target).value)"
+            [disabled]="isUpdatingFlat()"
+          />
+        </label>
+        <label>
+          <span>Available</span>
+          <select [value]="updateFlatIsAvailable() ? 'true' : 'false'" (change)="setUpdateFlatIsAvailable($any($event.target).value === 'true')" [disabled]="isUpdatingFlat()">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+        <label class="file-field">
+          <span>Flat Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-update-flat-picture">Choose Picture</label>
+            <input
+              id="admin-update-flat-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onUpdateFlatPictureSelected($event)"
+              [disabled]="isUpdatingFlat()"
+            />
+          </div>
+          @if (updateFlatPictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (updateFlatPicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected flat preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="updateFlat()" [disabled]="isUpdatingFlat() || isLoadingFlatDetail()">
+        {{ isUpdatingFlat() ? 'Updating...' : 'Update Flat' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
+
+
+@if (isAddFlatModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAddFlatModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Add Flat</h3>
+        <button type="button" class="action-btn ghost" (click)="closeAddFlatModal()">Close</button>
+      </header>
+      <div class="modal-content">
+
+      @if (addFlatModalError()) {
+        <p class="error-text">{{ addFlatModalError() }}</p>
+      }
+
+      <div class="form-grid">
+        <label>
+          <span>Flat Number</span>
+          <input type="text" [value]="addFlatNumber()" (input)="setAddFlatNumber($any($event.target).value)" [disabled]="isAddingFlat()" />
+        </label>
+        <label>
+          <span>Floor Number</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            [value]="addFloorNumber()"
+            (input)="setAddFloorNumber($any($event.target).value)"
+            [disabled]="isAddingFlat()"
+          />
+        </label>
+        <label>
+          <span>BHK Type</span>
+          <input type="text" [value]="addBhkType()" (input)="setAddBhkType($any($event.target).value)" [disabled]="isAddingFlat()" />
+        </label>
+        <label>
+          <span>Area Sqft</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [value]="addAreaSqft()"
+            (input)="setAddAreaSqft($any($event.target).value)"
+            [disabled]="isAddingFlat()"
+          />
+        </label>
+        <label>
+          <span>Rent Amount</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [value]="addRentAmount()"
+            (input)="setAddRentAmount($any($event.target).value)"
+            [disabled]="isAddingFlat()"
+          />
+        </label>
+        <label>
+          <span>Security Deposit</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [value]="addSecurityDeposit()"
+            (input)="setAddSecurityDeposit($any($event.target).value)"
+            [disabled]="isAddingFlat()"
+          />
+        </label>
+        <label>
+          <span>Available</span>
+          <select [value]="addIsAvailable() ? 'true' : 'false'" (change)="setAddIsAvailable($any($event.target).value === 'true')" [disabled]="isAddingFlat()">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+        <label class="file-field">
+          <span>Flat Picture (optional)</span>
+          <div class="upload-field">
+            <label class="upload-trigger" for="admin-add-flat-picture">Choose Picture</label>
+            <input
+              id="admin-add-flat-picture"
+              class="upload-input-hidden"
+              type="file"
+              accept="image/*"
+              (change)="onAddFlatPictureSelected($event)"
+              [disabled]="isAddingFlat()"
+            />
+          </div>
+          @if (addFlatPictureFile(); as file) {
+            <small class="upload-file-name">Selected: {{ file.name }}</small>
+          }
+          @if (addFlatPicturePreviewUrl(); as previewUrl) {
+            <div class="upload-preview-box">
+              <img class="upload-preview-image" [src]="previewUrl" alt="Selected flat preview" />
+            </div>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="action-btn primary" (click)="addFlat()" [disabled]="isAddingFlat()">
+        {{ isAddingFlat() ? 'Creating...' : 'Create Flat' }}
+      </button>
+      </div>
+    </article>
+  </section>
+}
