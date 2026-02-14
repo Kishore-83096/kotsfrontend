@@ -1,27 +1,7 @@
 <article class="flat-detail-page">
-  <header class="page-header">
-    <div class="page-header-identity">
-      @if (flat()?.picture_url) {
-        <button type="button" class="flat-media-card" (click)="openImagePreview(flat()!.picture_url!)" aria-label="Open preview for flat {{ flat()!.flat_number }}">
-          <img class="flat-image clickable-image" [src]="flat()!.picture_url" [alt]="flat()!.flat_number + ' image'" />
-          <div class="flat-hover-overlay">
-            <h4>{{ flat()!.flat_number }}</h4>
-            <p>{{ tower()?.name ?? 'Tower' }}</p>
-            <div class="flat-overlay-grid">
-              <p><span>Floor</span><strong>{{ flat()!.floor_number }}</strong></p>
-              <p><span>BHK Type</span><strong>{{ flat()!.bhk_type }}</strong></p>
-              <p><span>Area</span><strong>{{ flat()!.area_sqft }} sqft</strong></p>
-              <p><span>Rent</span><strong>{{ flat()!.rent_amount }}</strong></p>
-              <p><span>Deposit</span><strong>{{ flat()!.security_deposit }}</strong></p>
-              <p><span>Status</span><strong>{{ flat()!.is_available ? 'Available' : 'Not Available' }}</strong></p>
-            </div>
-          </div>
-        </button>
-      } @else {
-        <div class="flat-image-placeholder flat-header-placeholder">No Image</div>
-      }
-
-      <div class="page-header-main">
+  <header class="content-header">
+    <div class="header-layout">
+      <section class="header-info">
         <h2>{{ flat()?.flat_number ?? 'Flat' }}</h2>
         <p>
           Tower:
@@ -38,22 +18,30 @@
         @if (building()) {
           <p class="flat-address">{{ building()!.full_address ?? (building()!.address + ', ' + building()!.city + ', ' + building()!.state + ', ' + building()!.pincode) }}</p>
         }
+      </section>
+      <div class="header-actions-block">
+        <div class="header-meta-actions">
+          <a
+            class="action-btn ghost header-inline-btn"
+            [routerLink]="['/users/buildings', buildingId(), 'towers', towerId()]"
+            [attr.title]="'Back to ' + (tower()?.name ?? 'Tower')"
+          >
+            Back to <span class="back-label">{{ tower()?.name ?? 'Tower' }}</span>
+          </a>
+          <button
+            type="button"
+            class="action-btn primary header-inline-btn"
+            (click)="openBookingModal()"
+            [disabled]="flat()?.is_available === false || hasAlreadyBookedThisFlat()"
+          >
+            {{
+              hasAlreadyBookedThisFlat()
+                ? 'User Already Booked The Flat'
+                : (flat()?.is_available === false ? 'Flat Not Available' : 'Book Flat')
+            }}
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <a class="action-btn ghost" [routerLink]="['/users/buildings', buildingId(), 'towers', towerId()]">Back To Tower</a>
-      <button
-        type="button"
-        class="action-btn primary"
-        (click)="openBookingModal()"
-        [disabled]="flat()?.is_available === false || hasAlreadyBookedThisFlat()"
-      >
-        {{
-          hasAlreadyBookedThisFlat()
-            ? 'User Already Booked The Flat'
-            : (flat()?.is_available === false ? 'Flat Not Available' : 'Book Flat')
-        }}
-      </button>
     </div>
   </header>
 
@@ -71,42 +59,59 @@
     </section>
   }
 
+  <section class="flat-images-section">
+    <header class="section-header flat-images-section-header">
+      <h3>Flat Images</h3>
+      <p>Total Images: {{ flat()?.picture_url ? 1 : 0 }}</p>
+    </header>
+    <div class="flat-images-list">
+      <article class="flat-image-card">
+        @if (flat()?.picture_url) {
+          <img class="flat-gallery-image" [src]="flat()!.picture_url!" [alt]="(flat()?.flat_number ?? 'Flat') + ' image'" />
+        } @else {
+          <div class="flat-gallery-placeholder">No Flat Image</div>
+        }
+      </article>
+    </div>
+  </section>
+
   <section class="amenities-section">
     <header class="section-header amenities-section-header">
       <h3>Amenities</h3>
       <p>Total Amenities: {{ amenities().length }}</p>
     </header>
-    @if (amenities().length === 0 && !isLoading() && !error()) {
-      <section class="state-card">
-        <p>No amenities available for this flat.</p>
-      </section>
-    }
-
-    <div class="amenities-list">
-      @for (amenity of amenities(); track amenity.id) {
-        <article class="amenity-card">
-          @if (amenity.picture_url) {
-            <img class="amenity-image clickable-image" [src]="amenity.picture_url" [alt]="amenity.name + ' image'" (click)="openImagePreview(amenity.picture_url); $event.stopPropagation()" />
-          } @else {
-            <div class="amenity-image-placeholder">No Image</div>
-          }
-          <div
-            class="amenity-content"
-            role="button"
-            tabindex="0"
-            (click)="openAmenityModal(amenity.id)"
-            (keydown.enter)="openAmenityModal(amenity.id)"
-            (keydown.space)="openAmenityModal(amenity.id); $event.preventDefault()"
-            aria-label="Open details for amenity {{ amenity.name }}"
-          >
-            <h4>{{ amenity.name }}</h4>
-            <div class="amenity-meta-table">
-              <p><span>Amenity ID</span><strong>{{ amenity.id }}</strong></p>
-              <p class="meta-full"><span>Description</span><strong>{{ amenity.description ?? 'No description provided.' }}</strong></p>
-            </div>
-          </div>
-        </article>
+    <div class="list-scroll-region">
+      @if (amenities().length === 0 && !isLoading() && !error()) {
+        <section class="state-card">
+          <p>No amenities available for this flat.</p>
+        </section>
       }
+
+      <div class="amenities-list">
+        @for (amenity of amenities(); track amenity.name + '-' + $index) {
+          <article class="amenity-card">
+            <h4 class="amenity-title">{{ amenity.name }}</h4>
+            @if (amenity.picture_url) {
+              <img class="amenity-image" [src]="amenity.picture_url" [alt]="amenity.name + ' image'" />
+            } @else {
+              <div class="amenity-image-placeholder">No Image</div>
+            }
+            <div
+              class="amenity-content"
+              role="button"
+              tabindex="0"
+              (click)="openAmenityModal(amenity)"
+              (keydown.enter)="openAmenityModal(amenity)"
+              (keydown.space)="openAmenityModal(amenity); $event.preventDefault()"
+              aria-label="Open details for amenity {{ amenity.name }}"
+            >
+              <div class="amenity-meta-table">
+                <p class="meta-full"><span>Description</span><strong>{{ amenity.description ?? 'No description provided.' }}</strong></p>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
     </div>
   </section>
 </article>
@@ -139,8 +144,8 @@
       }
 
       <div class="modal-actions">
-        <button type="button" class="action-btn primary" (click)="createBooking()" [disabled]="isBookingSubmitting()">
-          {{ isBookingSubmitting() ? 'Booking...' : 'Confirm Booking' }}
+        <button type="button" class="action-btn primary" (click)="createBooking()" [disabled]="isBookingSubmitting() || !!bookingSuccess()">
+          {{ bookingSuccess() ? 'Booking Done' : (isBookingSubmitting() ? 'Booking...' : 'Confirm Booking') }}
         </button>
       </div>
       </div>
@@ -156,23 +161,10 @@
         <button type="button" class="action-btn ghost" (click)="closeAmenityModal()">Close</button>
       </header>
       <div class="modal-content">
-
-      @if (isAmenityLoading()) {
-        <div>
-          <div class="skeleton-block skeleton-line lg"></div>
-          <div class="skeleton-block skeleton-line"></div>
-          <div class="skeleton-block skeleton-image"></div>
-        </div>
-      }
-
-      @if (amenityError()) {
-        <p class="error-text">{{ amenityError() }}</p>
-      }
-
-      @if (!isAmenityLoading() && !amenityError() && selectedAmenity()) {
+      @if (selectedAmenity()) {
         <p class="subtitle"><strong>Building:</strong> {{ building()?.name ?? 'N/A' }}</p>
         @if (selectedAmenity()!.picture_url) {
-          <img class="amenity-modal-image clickable-image" [src]="selectedAmenity()!.picture_url!" [alt]="selectedAmenity()!.name + ' image'" (click)="openImagePreview(selectedAmenity()!.picture_url!)" />
+          <img class="amenity-modal-image" [src]="selectedAmenity()!.picture_url!" [alt]="selectedAmenity()!.name + ' image'" />
         } @else {
           <div class="amenity-image-placeholder amenity-modal-placeholder">No Image</div>
         }

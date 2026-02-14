@@ -1,27 +1,58 @@
 @import './theme.css';
 
+:root {
+  --modal-control-height: 46px;
+}
+
 * {
   box-sizing: border-box;
+  border-radius: 0 !important;
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0;
 }
 
 html {
-  overflow-y: scroll;
+  overflow: hidden;
+}
+
+:root[data-device='desktop'] {
+  --app-device: desktop;
+}
+
+:root[data-device='mobile'] {
+  --app-device: mobile;
+}
+
+body.device-desktop .show-on-mobile-only {
+  display: none !important;
+}
+
+body.device-mobile .show-on-desktop-only {
+  display: none !important;
 }
 
 body {
-  overflow-x: hidden;
-  font-family: var(--font-sans);
-  color: var(--color-text);
-  background: var(--gradient-page);
-  letter-spacing: 0.01em;
-  line-height: 1.5;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0;
+}
+
+/* Section separation with thin borders */
+section {
+  margin: 0 !important;
+  border-bottom: 1px solid var(--color-border-soft);
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 body::before {
@@ -70,7 +101,7 @@ body::before {
 .skeleton-block {
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0;
   background: color-mix(in srgb, var(--color-surface-muted) 70%, #fff);
 }
 
@@ -104,7 +135,7 @@ body::before {
 
 .route-transition-overlay {
   position: fixed;
-  top: 6.35rem;
+  top: 107px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -156,7 +187,7 @@ body::before {
 .profile-picture-actions {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: flex-end;
   gap: 0.5rem;
 }
@@ -164,10 +195,12 @@ body::before {
 .profile-picture-controls-row {
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.55rem;
   margin-left: auto;
+  margin-top: auto;
+  order: 3;
 }
 
 .upload-stack-box {
@@ -185,8 +218,8 @@ body::before {
 }
 
 .compact-danger-btn {
-  align-self: center;
-  padding: 0.4rem 0.78rem;
+  align-self: auto;
+  padding: 0 0.9rem;
 }
 
 .table-header-dropdown {
@@ -397,6 +430,19 @@ body:has(.modal-backdrop) {
   scrollbar-gutter: stable both-edges;
 }
 
+.modal-backdrop .header-btn,
+.modal-backdrop .tab-btn,
+.modal-backdrop .close-btn,
+.modal-backdrop .upload-trigger {
+  height: var(--modal-control-height);
+  min-height: var(--modal-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.9rem;
+  line-height: 1;
+}
+
 /* Global custom upload control + selected image preview */
 .upload-field {
   display: flex;
@@ -423,7 +469,7 @@ body:has(.modal-backdrop) {
   width: fit-content;
   border: 1px solid var(--color-border-strong);
   border-radius: 999px;
-  padding: 0.4rem 0.78rem;
+  padding: 0 0.9rem;
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-text-strong);
@@ -442,6 +488,7 @@ body:has(.modal-backdrop) {
   margin: 0;
   font-size: 0.82rem;
   color: var(--color-text-soft);
+  order: 2;
 }
 
 .upload-preview-box {
@@ -451,6 +498,14 @@ body:has(.modal-backdrop) {
   border-radius: 12px;
   background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
   padding: 0.35rem;
+}
+
+.profile-picture-actions .upload-preview-box {
+  order: 1;
+  margin: 0 0 0.35rem;
+  width: 120px;
+  max-width: 100%;
+  height: 120px;
 }
 
 .upload-preview-image {

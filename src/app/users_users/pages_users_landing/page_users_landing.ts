@@ -18,7 +18,7 @@ export class PageUsersLandingComponent {
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly activeTab = signal<'login' | 'register'>('login');
   protected readonly infoTab = signal<'overview' | 'roles' | 'flow' | 'stack'>('overview');
   protected readonly loginError = signal<string | null>(null);

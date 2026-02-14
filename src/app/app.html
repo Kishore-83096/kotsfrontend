@@ -1,52 +1,83 @@
-<main class="app-shell">
-  @if (hasSession()) {
+<main class="app-shell" [class.device-mobile]="isMobileDevice()" [class.device-desktop]="isDesktopDevice()">
+  @if (shouldShowGlobalHeader()) {
     <header class="auth-global-header">
       <div class="auth-header-inner">
         <div class="brand-block">
           <h1>KOTS Rental Application</h1>
           <p>Authenticated Workspace</p>
         </div>
-
-        <div class="auth-header-actions">
-          <button type="button" class="header-btn home-btn" (click)="openSearchModal()" aria-label="Search" title="Search" style="display:inline-flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M10 4a6 6 0 1 0 3.87 10.58l4.27 4.27 1.41-1.41-4.27-4.27A6 6 0 0 0 10 4m0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8" />
-            </svg>
-          </button>
-          <a class="header-btn home-btn" routerLink="/home" routerLinkActive="active-nav-btn" [routerLinkActiveOptions]="{ exact: true }" style="display:inline-flex;align-items:center;">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false" style="margin-right:0.32rem;display:block;">
-              <path fill="currentColor" d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z" />
-            </svg>
-            Home
-          </a>
-          <a class="header-btn" routerLink="/users/bookings" routerLinkActive="active-nav-btn" style="display:inline-flex;align-items:center;">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false" style="margin-right:0.32rem;display:block;">
-              <path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm12 7H5v10h14z" />
-            </svg>
-            Bookings
-          </a>
-          <div class="user-chip">
-            <div class="user-inline-row">
-              <span class="email">{{ displayEmail() }}</span>
-              @if (hasMasterAccess()) {
-                <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/master" routerLinkActive="active-role-nav-badge">MASTER</a>
-              }
-              @if (hasAdminAccess()) {
-                <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/admins" routerLinkActive="active-role-nav-badge">ADMIN</a>
+        @if (isMobileDevice()) {
+          <div class="mobile-header-actions">
+            <div class="mobile-menu-group">
+              <button type="button" class="header-btn mobile-dropdown-btn" (click)="toggleTitleMenu()" aria-label="Open title menu">
+                Menu <span class="dropdown-symbol">{{ isTitleMenuOpen() ? '▲' : '▼' }}</span>
+              </button>
+              @if (isTitleMenuOpen()) {
+                <div class="mobile-dropdown-panel">
+                  <div class="user-chip">
+                    <div class="user-inline-row">
+                      <span class="email">{{ displayEmail() }}</span>
+                    </div>
+                  </div>
+                  <button type="button" class="header-btn" (click)="openSearchModal()">Search</button>
+                  <a class="header-btn" routerLink="/home" (click)="closeMobileHeaderMenus()">Home</a>
+                  <a class="header-btn" routerLink="/users/bookings" (click)="closeMobileHeaderMenus()">Bookings</a>
+                  <button type="button" class="header-btn" (click)="openProfileModal()">Profile</button>
+                  @if (hasMasterAccess()) {
+                    <a class="header-btn" routerLink="/master" (click)="closeMobileHeaderMenus()">MASTER</a>
+                  }
+                  @if (hasAdminAccess()) {
+                    <a class="header-btn" routerLink="/admins" (click)="closeMobileHeaderMenus()">ADMIN</a>
+                  }
+                  <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
+                    {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
+                  </button>
+                </div>
               }
             </div>
           </div>
-          <button type="button" class="avatar-btn" (click)="openProfileModal()" aria-label="Open profile details">
-            @if (profileImageUrl(); as imageUrl) {
-              <img class="header-avatar" [src]="imageUrl" alt="User profile picture" />
-            } @else {
-              <span class="avatar-fallback">{{ profileInitials() }}</span>
-            }
-          </button>
-          <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
-            {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
-          </button>
-        </div>
+        } @else {
+          <div class="auth-header-actions">
+            <button type="button" class="header-btn home-btn" (click)="openSearchModal()" aria-label="Search" title="Search" style="display:inline-flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M10 4a6 6 0 1 0 3.87 10.58l4.27 4.27 1.41-1.41-4.27-4.27A6 6 0 0 0 10 4m0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8" />
+              </svg>
+            </button>
+            <a class="header-btn home-btn" routerLink="/home" routerLinkActive="active-nav-btn" [routerLinkActiveOptions]="{ exact: true }" style="display:inline-flex;align-items:center;">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false" style="margin-right:0.32rem;display:block;">
+                <path fill="currentColor" d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z" />
+              </svg>
+              Home
+            </a>
+            <a class="header-btn" routerLink="/users/bookings" routerLinkActive="active-nav-btn" style="display:inline-flex;align-items:center;">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false" style="margin-right:0.32rem;display:block;">
+                <path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm12 7H5v10h14z" />
+              </svg>
+              Bookings
+            </a>
+            <div class="user-chip">
+              <div class="user-inline-row">
+                <span class="email">{{ displayEmail() }}</span>
+                @if (hasMasterAccess()) {
+                  <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/master" routerLinkActive="active-role-nav-badge">MASTER</a>
+                }
+                @if (hasAdminAccess()) {
+                  <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/admins" routerLinkActive="active-role-nav-badge">ADMIN</a>
+                }
+              </div>
+            </div>
+            <button type="button" class="avatar-btn" (click)="openProfileModal()" aria-label="Open profile details">
+              @if (profileImageUrl(); as imageUrl) {
+                <img class="header-avatar" [src]="imageUrl" alt="User profile picture" />
+              } @else {
+                <span class="avatar-fallback">{{ profileInitials() }}</span>
+              }
+            </button>
+            <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
+              {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
+            </button>
+          </div>
+        }
       </div>
       <div class="global-loading-track" [class.active]="isGlobalLoading()">
         <div class="global-loading-runner"></div>
@@ -54,7 +85,7 @@
     </header>
   }
 
-  <section class="app-content" [class.with-auth-header]="hasSession()">
+  <section class="app-content" [class.with-auth-header]="shouldShowGlobalHeader()">
     @if (showRouteTransitionOverlay()) {
       <div class="route-transition-overlay" aria-hidden="true">
         <section class="route-welcome-grid">

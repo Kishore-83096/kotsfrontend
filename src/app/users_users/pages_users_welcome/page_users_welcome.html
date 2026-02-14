@@ -1,17 +1,22 @@
 <article class="welcome-card">
   <header class="content-header">
-    <h2>Welcome Back</h2>
+    <div class="header-layout">
+      <section class="header-info">
+        <h2>Welcome Back {{ welcomeIdentity() }}</h2>
+        <p>Browse building inventory and availability.</p>
+      </section>
+    </div>
   </header>
 
   @if (userDataError()) {
-    <section class="result-card">
+    <section class="state-card error">
       <h3>Buildings Fetch Error</h3>
       <p class="error-text">{{ userDataError() }}</p>
     </section>
   }
 
   @if (buildingsData().length === 0 && !isLoadingUserData() && !userDataError()) {
-    <section class="result-card">
+    <section class="state-card">
       <h3>No Buildings Found</h3>
       <p class="empty-text">No building records were found.</p>
     </section>
@@ -21,10 +26,15 @@
     <section class="buildings-grid">
       @for (item of [1, 2, 3]; track item) {
         <article class="building-card">
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+          </div>
           <div class="skeleton-block skeleton-image"></div>
-          <div class="skeleton-block skeleton-line lg"></div>
-          <div class="skeleton-block skeleton-line"></div>
-          <div class="skeleton-block skeleton-line"></div>
+          <div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </div>
         </article>
       }
     </section>
@@ -32,43 +42,41 @@
 
   <section class="buildings-grid">
     @for (building of buildingsData(); track building.id) {
-      <article class="building-card">
+      <article
+        class="building-card"
+        role="button"
+        tabindex="0"
+        (click)="openBuildingTowers(building.id)"
+        (keydown.enter)="openBuildingTowers(building.id)"
+        (keydown.space)="openBuildingTowers(building.id); $event.preventDefault()"
+        aria-label="Open towers for {{ building.name }}"
+      >
+        <h3 class="building-title">{{ building.name }}</h3>
+
         @if (building.picture_url) {
           <img
-            class="building-image clickable-image"
+            class="building-image"
             [src]="building.picture_url"
             [alt]="building.name + ' picture'"
-            (click)="openImagePreview(building.picture_url); $event.stopPropagation()"
           />
         } @else {
           <div class="building-image-placeholder">No Image</div>
         }
 
-        <div
-          class="building-content"
-          role="button"
-          tabindex="0"
-          (click)="openBuildingTowers(building.id)"
-          (keydown.enter)="openBuildingTowers(building.id)"
-          (keydown.space)="openBuildingTowers(building.id); $event.preventDefault()"
-          aria-label="Open towers for {{ building.name }}"
-        >
-          <h3>{{ building.name }}</h3>
-          <p class="building-address">{{ building.full_address ?? (building.address + ', ' + building.city + ', ' + building.state + ', ' + building.pincode) }}</p>
-
-          <div class="building-meta-table">
-            <p><span>Building ID</span><strong>{{ building.id }}</strong></p>
-            <p><span>Towers</span><strong>{{ building.towers_count ?? building.total_towers ?? 'N/A' }}</strong></p>
-            <p><span>Total Flats</span><strong>{{ building.flats_count ?? 'N/A' }}</strong></p>
-            <p><span>Available Flats</span><strong>{{ building.available_flats_count ?? 'N/A' }}</strong></p>
-            <p class="meta-full">
-              <span>Summary Amenities</span>
-              <strong>{{ amenitiesText(building) }}</strong>
-              <button type="button" class="view-btn summary-amenities-action" (click)="openAmenitiesModal(building); $event.stopPropagation()">
-              View Amenities
-              </button>
-            </p>
+        <div class="building-content">
+          <div class="building-data-section">
+            <div class="building-meta-table">
+              <p><span>Address</span><strong>{{ building.full_address ?? (building.address + ', ' + building.city + ', ' + building.state + ', ' + building.pincode) }}</strong></p>
+              <p><span>Towers</span><strong>{{ building.towers_count ?? building.total_towers ?? 'N/A' }}</strong></p>
+              <p><span>Total Flats</span><strong>{{ building.flats_count ?? 'N/A' }}</strong></p>
+              <p><span>Available Flats</span><strong>{{ building.available_flats_count ?? 'N/A' }}</strong></p>
+            </div>
           </div>
+        </div>
+        <div class="building-action-section">
+          <button type="button" class="view-btn summary-amenities-action" (click)="openAmenitiesModal(building); $event.stopPropagation()">
+            View Amenities
+          </button>
         </div>
       </article>
     }
@@ -104,19 +112,16 @@
         <p class="building-name-line"><strong>Building:</strong> {{ selectedAmenitiesBuilding()?.name ?? 'N/A' }}</p>
 
         <div class="amenities-list">
-          @for (amenity of amenitiesModalData(); track amenity.id) {
+          @for (amenity of amenitiesModalData(); track amenity.name + '-' + $index) {
             <article class="amenity-card">
               @if (amenity.picture_url) {
-                <img class="amenity-image clickable-image" [src]="amenity.picture_url" [alt]="amenity.name + ' image'" (click)="openImagePreview(amenity.picture_url)" />
+                <img class="amenity-image" [src]="amenity.picture_url" [alt]="amenity.name + ' image'" />
               } @else {
                 <div class="amenity-image-placeholder">No Image</div>
               }
 
               <div class="amenity-content">
                 <h4>{{ amenity.name }}</h4>
-                <div class="amenity-meta-row">
-                  <span class="amenity-chip">Amenity ID: {{ amenity.id }}</span>
-                </div>
                 <p class="amenity-description"><strong>Description:</strong> {{ amenity.description ?? 'No description' }}</p>
               </div>
             </article>

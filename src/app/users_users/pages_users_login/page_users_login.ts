@@ -18,7 +18,7 @@ export class PageUsersLoginComponent {
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly isSubmitting = signal(false);
   protected readonly formError = signal<string | null>(null);
 

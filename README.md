@@ -9,6 +9,17 @@ It provides a role-aware UI for:
 
 The app is built with Angular standalone components, Angular Router, reactive forms, and typed API envelopes aligned with the Flask backend.
 
+## Recent Backend-Driven Updates (Feb 2026)
+- Backend response envelope was simplified:
+  - Success: `status_code + data`
+  - Error: `status_code + error`
+- Backend now applies image-aware API caching for `GET` responses and returns `ETag`/`Cache-Control` headers.
+- Backend now applies static asset cache policy (when assets are served via Flask):
+  - `index.html` uses revalidation (`no-cache`)
+  - hashed/static assets (`.js`, `.css`, fonts, images) use long immutable caching.
+- Backend upload pipeline now compresses images to roughly `100KB` before Cloudinary upload.
+- Search endpoints now use word-based address matching and ranking for better address discovery.
+
 ## Why This Frontend Exists
 This frontend is used to turn the backend APIs into an end-to-end operational UI:
 - Users can discover flats/buildings visually, search by location/rent/type, and create bookings.

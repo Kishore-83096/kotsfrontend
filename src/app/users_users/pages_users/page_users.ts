@@ -13,7 +13,7 @@ import { HealthStatusUsers } from '../typescript_users/type_users';
 export class PageUsersComponent implements OnInit {
   private readonly http = inject(HttpClient);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly isChecking = signal(false);
   protected readonly checkedAt = signal<string | null>(null);
   protected readonly pageError = signal<string | null>(null);

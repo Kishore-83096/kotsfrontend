@@ -22,7 +22,7 @@ export class PageUsersBookingsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly isLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly bookingsResponse = signal<UsersBookingsResponseEnvelopeUsers | null>(null);

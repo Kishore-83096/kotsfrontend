@@ -1,12 +1,12 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { ImagePreviewState } from '../../shared/image_preview_state';
-import { getUsersBuildingAmenitiesApi, getUsersBuildingsApi } from '../api_users_auth';
+import { getUsersBuildingAmenitiesApi, getUsersBuildingsApi, getUsersProfileApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
 import {
   BuildingAmenityUsers,
   UserBuildingListItemUsers,
+  UserProfileResponseEnvelopeUsers,
   UsersBuildingAmenitiesDataUsers,
   UsersBuildingsResponseEnvelopeUsers,
 } from '../typescript_users/type_users';
@@ -21,21 +21,34 @@ export class PageUsersWelcomeComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
-  private readonly imagePreviewState = inject(ImagePreviewState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly isLoadingUserData = signal(false);
   protected readonly userDataError = signal<string | null>(null);
   protected readonly buildingsResponse = signal<UsersBuildingsResponseEnvelopeUsers | null>(null);
+  protected readonly profileResponse = signal<UserProfileResponseEnvelopeUsers | null>(null);
   protected readonly amenitiesByBuilding = signal<Record<number, BuildingAmenityUsers[]>>({});
   protected readonly isAmenitiesModalOpen = signal(false);
   protected readonly selectedAmenitiesBuilding = signal<UserBuildingListItemUsers | null>(null);
   protected readonly isAmenitiesModalLoading = signal(false);
   protected readonly amenitiesModalError = signal<string | null>(null);
   protected readonly amenitiesModalData = signal<BuildingAmenityUsers[]>([]);
+  protected readonly welcomeIdentity = computed(() => {
+    const profile = this.profileResponse()?.data;
+    const username = typeof profile?.username === 'string' ? profile.username.trim() : '';
+    if (username) {
+      return username;
+    }
+    const primaryEmail = typeof profile?.primary_email === 'string' ? profile.primary_email.trim() : '';
+    if (primaryEmail) {
+      return primaryEmail;
+    }
+    return this.authState.lastLoginResult()?.data.email ?? 'User';
+  });
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadProfileIdentity();
   }
 
   protected loadUserData(): void {
@@ -110,6 +123,25 @@ export class PageUsersWelcomeComponent implements OnInit {
     this.amenitiesModalData.set([]);
   }
 
+  private loadProfileIdentity(): void {
+    const token = this.authState.accessToken();
+    if (!token) {
+      return;
+    }
+
+    getUsersProfileApi(this.http, this.apiBaseUrl(), token).subscribe({
+      next: (response) => {
+        this.profileResponse.set(response);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+        }
+      },
+    });
+  }
+
   private loadBuildingAmenities(buildingId: number): void {
     const token = this.authState.accessToken();
     if (!token) {
@@ -146,7 +178,4 @@ export class PageUsersWelcomeComponent implements OnInit {
     });
   }
 
-  protected openImagePreview(imageUrl: string): void {
-    this.imagePreviewState.open(imageUrl);
-  }
 }

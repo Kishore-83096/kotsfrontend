@@ -31,10 +31,10 @@
   --color-success-border: rgba(73, 103, 70, 0.35);
   --color-danger-border: rgba(181, 77, 61, 0.4);
 
-  --radius-sm: 0.45rem;
-  --radius-md: 0.9rem;
-  --radius-lg: 20px;
-  --radius-xl: 30px;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
   --shadow-card: 0 18px 48px rgba(43, 34, 24, 0.12);
   --shadow-soft: 0 12px 30px rgba(68, 52, 34, 0.1);
   --shadow-soft-hover: 0 24px 60px rgba(54, 42, 30, 0.18);

@@ -1,10 +1,15 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ImagePreviewState } from '../../shared/image_preview_state';
-import { getUsersBuildingTowersApi, getUsersBuildingsApi } from '../api_users_auth';
+import { getUsersBuildingAmenitiesApi, getUsersBuildingTowersApi, getUsersBuildingsApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
-import { UserBuildingListItemUsers, UserTowerListItemUsers, UsersBuildingTowersResponseEnvelopeUsers } from '../typescript_users/type_users';
+import {
+  BuildingAmenityUsers,
+  UserBuildingListItemUsers,
+  UserTowerListItemUsers,
+  UsersBuildingAmenitiesDataUsers,
+  UsersBuildingTowersResponseEnvelopeUsers,
+} from '../typescript_users/type_users';
 
 @Component({
   selector: 'app-page-users-building-towers',
@@ -18,14 +23,20 @@ export class PageUsersBuildingTowersComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
-  private readonly imagePreviewState = inject(ImagePreviewState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly buildingId = signal<number | null>(null);
   protected readonly isLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly towersResponse = signal<UsersBuildingTowersResponseEnvelopeUsers | null>(null);
   protected readonly selectedBuilding = signal<UserBuildingListItemUsers | null>(null);
+  protected readonly amenitiesByBuilding = signal<Record<number, BuildingAmenityUsers[]>>({});
+  protected readonly isAmenitiesModalOpen = signal(false);
+  protected readonly selectedAmenitiesBuilding = signal<UserBuildingListItemUsers | null>(null);
+  protected readonly isAmenitiesModalLoading = signal(false);
+  protected readonly amenitiesModalError = signal<string | null>(null);
+  protected readonly amenitiesModalData = signal<BuildingAmenityUsers[]>([]);
+  protected readonly isListScrolled = signal(false);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -98,16 +109,33 @@ export class PageUsersBuildingTowersComponent implements OnInit {
     this.router.navigateByUrl(`/users/buildings/${buildingId}/towers/${towerId}`);
   }
 
-  protected openImagePreview(imageUrl: string): void {
-    this.imagePreviewState.open(imageUrl);
+  protected openAmenitiesModal(building: UserBuildingListItemUsers): void {
+    this.selectedAmenitiesBuilding.set(building);
+    this.isAmenitiesModalOpen.set(true);
+    this.amenitiesModalError.set(null);
+    this.amenitiesModalData.set([]);
+
+    const cached = this.amenitiesByBuilding()[building.id];
+    if (cached) {
+      this.amenitiesModalData.set(cached);
+      this.isAmenitiesModalLoading.set(false);
+      return;
+    }
+
+    this.loadBuildingAmenities(building.id);
   }
 
-  protected amenitiesText(building: UserBuildingListItemUsers): string {
-    const amenities = building.amenities ?? [];
-    if (amenities.length === 0) {
-      return 'N/A';
-    }
-    return amenities.map((amenity) => amenity.name).join(', ');
+  protected closeAmenitiesModal(): void {
+    this.isAmenitiesModalOpen.set(false);
+    this.selectedAmenitiesBuilding.set(null);
+    this.isAmenitiesModalLoading.set(false);
+    this.amenitiesModalError.set(null);
+    this.amenitiesModalData.set([]);
+  }
+
+  protected onListScroll(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    this.isListScrolled.set((target?.scrollTop ?? 0) > 8);
   }
 
   private loadBuildingSummary(): void {
@@ -130,6 +158,42 @@ export class PageUsersBuildingTowersComponent implements OnInit {
           this.authState.clearAuth();
           this.router.navigateByUrl('/users/login');
         }
+      },
+    });
+  }
+
+  private loadBuildingAmenities(buildingId: number): void {
+    const token = this.authState.accessToken();
+    if (!token) {
+      this.error.set('No active session found. Please login again.');
+      return;
+    }
+
+    this.isAmenitiesModalLoading.set(true);
+    this.amenitiesModalError.set(null);
+
+    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), token, buildingId).subscribe({
+      next: (response) => {
+        const payload = (response.data ?? {}) as Partial<UsersBuildingAmenitiesDataUsers> | BuildingAmenityUsers[];
+        const amenities = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload.amenities)
+            ? payload.amenities
+            : [];
+        this.amenitiesByBuilding.update((prev) => ({ ...prev, [buildingId]: amenities }));
+        this.amenitiesModalData.set(amenities);
+        this.isAmenitiesModalLoading.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+          this.isAmenitiesModalLoading.set(false);
+          return;
+        }
+
+        this.amenitiesModalError.set('Failed to fetch amenities.');
+        this.isAmenitiesModalLoading.set(false);
       },
     });
   }

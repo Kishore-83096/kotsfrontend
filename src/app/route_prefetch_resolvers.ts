@@ -4,7 +4,7 @@ import { ActivatedRouteSnapshot, ResolveFn, Router, UrlTree } from '@angular/rou
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { UsersAuthState } from './users_users/state_users_auth';
 
-const API_BASE_URL = 'http://127.0.0.1:5000';
+const API_BASE_URL = 'https://kots.onrender.com';
 
 function normalizeToken(token: string): string {
   const trimmed = token.trim();

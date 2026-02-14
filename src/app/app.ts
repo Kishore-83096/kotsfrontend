@@ -33,13 +33,15 @@ export class App {
   private readonly imagePreviewState = inject(ImagePreviewState);
   private readonly httpLoadingState = inject(HttpLoadingState);
   private readonly document = inject(DOCUMENT);
+  private readonly viewportWindow = this.document.defaultView;
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly isLoggingOut = signal(false);
   protected readonly isLoadingUserData = signal(false);
   protected readonly userDataError = signal<string | null>(null);
   protected readonly isSearchModalOpen = signal(false);
   protected readonly isProfileModalOpen = signal(false);
+  protected readonly isTitleMenuOpen = signal(false);
   protected readonly activeModalTab = signal<'profile' | 'account'>('profile');
   protected readonly selectedProfilePictureFile = signal<File | null>(null);
   protected readonly selectedProfilePicturePreviewUrl = signal<string | null>(null);
@@ -77,6 +79,13 @@ export class App {
   protected readonly globalSearchMinRent = signal('');
   protected readonly globalSearchMaxRent = signal('');
   protected readonly hasSession = computed(() => Boolean(this.authState.accessToken()));
+  protected readonly currentRoutePath = signal(this.normalizeRoutePath(this.router.url));
+  protected readonly shouldShowGlobalHeader = computed(
+    () => this.hasSession() && !this.isPublicEntryRoute(this.currentRoutePath()),
+  );
+  protected readonly deviceMode = signal<'mobile' | 'desktop'>(this.detectDeviceMode());
+  protected readonly isMobileDevice = computed(() => this.deviceMode() === 'mobile');
+  protected readonly isDesktopDevice = computed(() => this.deviceMode() === 'desktop');
   protected readonly isGlobalLoading = computed(() => this.httpLoadingState.isLoading() || this.isRouteTransitioning());
   protected readonly showRouteTransitionOverlay = computed(() => this.hasSession() && this.isLoginHomeTransition());
   protected readonly globalPreviewImageUrl = this.imagePreviewState.imageUrl;
@@ -114,6 +123,7 @@ export class App {
   protected readonly hasAdminAccess = computed(() => this.roleBadges().includes('ADMIN'));
   protected readonly hasMasterAccess = computed(() => this.roleBadges().includes('MASTER'));
   private imageMutationObserver: MutationObserver | null = null;
+  private readonly onWindowResize = () => this.refreshDeviceMode();
 
   protected readonly profileRows = computed(() => {
     const profile = this.profileData();
@@ -162,12 +172,18 @@ export class App {
       this.document.documentElement.style.overflow = overflow;
     });
 
+    effect(() => {
+      this.applyDeviceSelectors(this.deviceMode());
+    });
+
     this.router.events
       .pipe(takeUntilDestroyed())
       .subscribe((event) => {
         if (event instanceof NavigationStart) {
+          this.closeMobileHeaderMenus();
           const fromPath = this.normalizeRoutePath(this.router.url);
           const toPath = this.normalizeRoutePath(event.url);
+          this.currentRoutePath.set(toPath);
           this.isLoginHomeTransition.set(this.shouldShowLoginHomeTransition(fromPath, toPath));
           this.isRouteTransitioning.set(true);
           return;
@@ -178,18 +194,25 @@ export class App {
           event instanceof NavigationCancel ||
           event instanceof NavigationError
         ) {
+          this.currentRoutePath.set(this.normalizeRoutePath(this.router.url));
           this.isRouteTransitioning.set(false);
           this.isLoginHomeTransition.set(false);
         }
       });
 
     this.setupGlobalImageLoadingState();
+    if (this.viewportWindow) {
+      this.viewportWindow.addEventListener('resize', this.onWindowResize, { passive: true });
+    }
   }
 
   ngOnDestroy(): void {
     if (this.imageMutationObserver) {
       this.imageMutationObserver.disconnect();
       this.imageMutationObserver = null;
+    }
+    if (this.viewportWindow) {
+      this.viewportWindow.removeEventListener('resize', this.onWindowResize);
     }
   }
 
@@ -198,6 +221,7 @@ export class App {
   }
 
   protected openProfileModal(): void {
+    this.closeMobileHeaderMenus();
     this.activeModalTab.set('profile');
     this.isProfileModalOpen.set(true);
     if (!this.meResponse() || !this.profileResponse()) {
@@ -275,11 +299,20 @@ export class App {
   }
 
   protected openSearchModal(): void {
+    this.closeMobileHeaderMenus();
     this.isSearchModalOpen.set(true);
   }
 
   protected closeSearchModal(): void {
     this.isSearchModalOpen.set(false);
+  }
+
+  protected toggleTitleMenu(): void {
+    this.isTitleMenuOpen.update((value) => !value);
+  }
+
+  protected closeMobileHeaderMenus(): void {
+    this.isTitleMenuOpen.set(false);
   }
 
   protected setGlobalSearchAddress(value: string): void {
@@ -572,6 +605,7 @@ export class App {
   }
 
   protected logout(): void {
+    this.closeMobileHeaderMenus();
     const token = this.authState.accessToken();
     if (!token) {
       this.authState.clearAuth();
@@ -698,7 +732,29 @@ export class App {
   }
 
   private shouldShowLoginHomeTransition(fromPath: string, toPath: string): boolean {
-    const publicEntryRoutes = new Set(['/', '/users/login', '/users/register']);
-    return toPath === '/home' && publicEntryRoutes.has(fromPath);
+    return toPath === '/home' && this.isPublicEntryRoute(fromPath);
+  }
+
+  private isPublicEntryRoute(path: string): boolean {
+    return path === '/' || path === '/users/login' || path === '/users/register';
+  }
+
+  private detectDeviceMode(): 'mobile' | 'desktop' {
+    if (!this.viewportWindow) {
+      return 'desktop';
+    }
+    return this.viewportWindow.innerWidth <= 768 ? 'mobile' : 'desktop';
+  }
+
+  private refreshDeviceMode(): void {
+    this.deviceMode.set(this.detectDeviceMode());
+  }
+
+  private applyDeviceSelectors(mode: 'mobile' | 'desktop'): void {
+    const root = this.document.documentElement;
+    const body = this.document.body;
+    root?.setAttribute('data-device', mode);
+    body?.classList.toggle('device-mobile', mode === 'mobile');
+    body?.classList.toggle('device-desktop', mode === 'desktop');
   }
 }

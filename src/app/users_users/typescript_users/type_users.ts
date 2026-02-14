@@ -104,7 +104,6 @@ export interface UserProfileResponseDataUsers {
 }
 
 export interface BuildingAmenityUsers {
-  id: number;
   name: string;
   description?: string | null;
   picture_url?: string | null;
@@ -112,13 +111,13 @@ export interface BuildingAmenityUsers {
 }
 
 export interface UsersBuildingAmenitiesDataUsers {
-  building?: { id: number; name: string; [key: string]: unknown };
+  building?: { name: string; [key: string]: unknown };
   amenities: BuildingAmenityUsers[];
   [key: string]: unknown;
 }
 
 export interface UsersBuildingAmenityDetailDataUsers {
-  building: { id: number; name: string; [key: string]: unknown };
+  building: { name: string; [key: string]: unknown };
   amenity: BuildingAmenityUsers;
   [key: string]: unknown;
 }
@@ -170,7 +169,6 @@ export interface UserTowerDetailDataUsers {
 
 export interface UserFlatListItemUsers {
   id: number;
-  tower_id: number;
   flat_number: string;
   floor_number: number;
   bhk_type: string;
@@ -228,7 +226,6 @@ export interface UsersBuildingSearchDataUsers {
 
 export interface UserBookingResponseDataUsers {
   id: number;
-  user_id: number;
   flat_id: number;
   tower_id: number;
   building_id: number;
@@ -242,9 +239,9 @@ export interface UserBookingResponseDataUsers {
 }
 
 export interface UsersBookingListItemUsers extends UserBookingResponseDataUsers {
-  building?: { id: number; name: string; [key: string]: unknown };
-  tower?: { id: number; name: string; [key: string]: unknown };
-  flat?: { id: number; flat_number: string; [key: string]: unknown };
+  building?: { name: string; [key: string]: unknown };
+  tower?: { name: string; [key: string]: unknown };
+  flat?: { flat_number: string; [key: string]: unknown };
   manager?: { name?: string | null; phone?: string | null; [key: string]: unknown };
 }
 

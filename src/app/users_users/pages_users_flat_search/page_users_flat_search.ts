@@ -27,12 +27,13 @@ export class PageUsersFlatSearchComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly response = signal<UsersFlatSearchResponseEnvelopeUsers | null>(null);
   protected readonly buildingResponse = signal<UsersBuildingSearchResponseEnvelopeUsers | null>(null);
   protected readonly isLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly tab = signal<'flat' | 'building'>('flat');
+  protected readonly isSearchDropdownOpen = signal(true);
 
   protected readonly buildingName = signal('');
   protected readonly address = signal('');
@@ -106,6 +107,10 @@ export class PageUsersFlatSearchComponent implements OnInit {
   protected setTab(tab: 'flat' | 'building'): void {
     this.tab.set(tab);
     this.submitSearch();
+  }
+
+  protected toggleSearchDropdown(): void {
+    this.isSearchDropdownOpen.update((prev) => !prev);
   }
 
   protected items(): UsersFlatSearchItemUsers[] {

@@ -1,12 +1,10 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ImagePreviewState } from '../../shared/image_preview_state';
-import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersBuildingAmenityByIdApi, getUsersFlatDetailApi } from '../api_users_auth';
+import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersFlatDetailApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
 import {
   BuildingAmenityUsers,
-  UsersBuildingAmenityDetailResponseEnvelopeUsers,
   UsersCreateBookingResponseEnvelopeUsers,
   UsersFlatDetailResponseEnvelopeUsers,
   UsersBookingsResponseEnvelopeUsers,
@@ -24,9 +22,8 @@ export class PageUsersFlatDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
-  private readonly imagePreviewState = inject(ImagePreviewState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly buildingId = signal<number | null>(null);
   protected readonly towerId = signal<number | null>(null);
   protected readonly flatId = signal<number | null>(null);
@@ -40,9 +37,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected readonly bookingResponse = signal<UsersCreateBookingResponseEnvelopeUsers | null>(null);
   protected readonly hasAlreadyBookedThisFlat = signal(false);
   protected readonly isAmenityModalOpen = signal(false);
-  protected readonly isAmenityLoading = signal(false);
-  protected readonly amenityError = signal<string | null>(null);
-  protected readonly amenityDetailResponse = signal<UsersBuildingAmenityDetailResponseEnvelopeUsers | null>(null);
+  protected readonly selectedAmenity = signal<BuildingAmenityUsers | null>(null);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -138,48 +133,14 @@ export class PageUsersFlatDetailComponent implements OnInit {
     return this.detailResponse()?.data?.amenities ?? [];
   }
 
-  protected openAmenityModal(amenityId: number): void {
-    const buildingId = this.buildingId();
-    const token = this.authState.accessToken();
-    if (!buildingId || !token) {
-      this.amenityError.set('Unable to load amenity details.');
-      return;
-    }
-
+  protected openAmenityModal(amenity: BuildingAmenityUsers): void {
     this.isAmenityModalOpen.set(true);
-    this.isAmenityLoading.set(true);
-    this.amenityError.set(null);
-    this.amenityDetailResponse.set(null);
-
-    getUsersBuildingAmenityByIdApi(this.http, this.apiBaseUrl(), token, buildingId, amenityId).subscribe({
-      next: (response) => {
-        this.amenityDetailResponse.set(response);
-        this.isAmenityLoading.set(false);
-      },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.amenityError.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isAmenityLoading.set(false);
-          return;
-        }
-
-        this.amenityError.set('Failed to fetch amenity details.');
-        this.isAmenityLoading.set(false);
-      },
-    });
+    this.selectedAmenity.set(amenity);
   }
 
   protected closeAmenityModal(): void {
     this.isAmenityModalOpen.set(false);
-    this.isAmenityLoading.set(false);
-    this.amenityError.set(null);
-    this.amenityDetailResponse.set(null);
-  }
-
-  protected selectedAmenity() {
-    return this.amenityDetailResponse()?.data?.amenity ?? null;
+    this.selectedAmenity.set(null);
   }
 
   protected openBookingModal(): void {
@@ -254,9 +215,5 @@ export class PageUsersFlatDetailComponent implements OnInit {
         // Non-blocking: keep booking flow usable even if this lookup fails.
       },
     });
-  }
-
-  protected openImagePreview(imageUrl: string): void {
-    this.imagePreviewState.open(imageUrl);
   }
 }

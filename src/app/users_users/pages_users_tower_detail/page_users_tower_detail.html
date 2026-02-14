@@ -1,40 +1,31 @@
 <article class="tower-detail-page">
-  <header class="page-header">
-    <div class="page-header-identity">
-      @if (tower()?.picture_url) {
-        <button type="button" class="tower-media-card" (click)="openImagePreview(tower()!.picture_url!)" aria-label="Open preview for tower {{ tower()!.name }}">
-          <img class="tower-image clickable-image" [src]="tower()!.picture_url" [alt]="tower()!.name + ' tower image'" />
-          <div class="tower-hover-overlay">
-            <h4>{{ tower()!.name }}</h4>
-            <p>{{ building()?.name ?? 'Building' }}</p>
-            <div class="tower-overlay-grid">
-              <p><span>Tower ID</span><strong>{{ tower()!.id }}</strong></p>
-              <p><span>Floors</span><strong>{{ tower()!.floors }}</strong></p>
-              <p><span>Total Flats</span><strong>{{ tower()!.total_flats ?? 'N/A' }}</strong></p>
-              <p><span>Current Added Flats</span><strong>{{ tower()!.flats_count ?? 'N/A' }}</strong></p>
-              <p><span>Available Flats</span><strong>{{ tower()!.available_flats_count ?? 'N/A' }}</strong></p>
-            </div>
-          </div>
-        </button>
-      } @else {
-        <div class="tower-image-placeholder tower-header-placeholder">No Image</div>
-      }
-
-      <div class="page-header-main">
-        <h2>{{ tower()?.name ?? 'Tower' }}</h2>
-        <p>
-          Building:
-          <a class="entity-link" [routerLink]="['/users/buildings', buildingId(), 'towers']">
-            {{ building()?.name ?? 'Building' }}
-          </a>
-        </p>
-        @if (building()) {
-          <p class="tower-address">{{ building()!.full_address ?? (building()!.address + ', ' + building()!.city + ', ' + building()!.state + ', ' + building()!.pincode) }}</p>
+  <header class="content-header">
+    <div class="header-layout">
+      <section class="header-info">
+        <h2>{{ tower()?.name ?? 'Tower' }} Flats</h2>
+        <p>Browse flat inventory and availability.</p>
+      </section>
+      <div class="header-actions-block">
+        @if (!isLoading() && !error()) {
+          <p class="header-totals-right">
+            Total Flats: {{ flatsData().length }} | Available Flats: {{ availableFlatsCount() }}
+          </p>
         }
+        <div class="header-meta-actions">
+          @if (building()) {
+            <button type="button" class="view-btn header-inline-btn" (click)="openAmenitiesModal()">
+              View Amenities
+            </button>
+          }
+          <a
+            class="action-btn ghost header-inline-btn"
+            [routerLink]="['/users/buildings', buildingId(), 'towers']"
+            [attr.title]="'Go back to ' + (building()?.name ?? 'Building')"
+          >
+            Go Back to {{ building()?.name ?? 'Building' }}
+          </a>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <a class="action-btn ghost" [routerLink]="['/users/buildings', buildingId(), 'towers']">Back To Towers</a>
     </div>
   </header>
 
@@ -44,66 +35,107 @@
     </section>
   }
 
-  @if (isLoading()) {
-    <section class="flats-section">
-      <div class="skeleton-block skeleton-line lg"></div>
-      <div class="flats-list">
-        @for (item of [1, 2, 3]; track item) {
-          <article class="flat-card">
-            <div class="skeleton-block skeleton-image"></div>
-            <div>
-              <div class="skeleton-block skeleton-line lg"></div>
-              <div class="skeleton-block skeleton-line"></div>
-              <div class="skeleton-block skeleton-line"></div>
-            </div>
-          </article>
-        }
-      </div>
+  @if (flatsData().length === 0 && !isLoading() && !error()) {
+    <section class="state-card">
+      <p>No flats found for this tower.</p>
     </section>
   }
 
-  <section class="flats-section">
-    <header class="section-header flats-section-header">
-      <h3>Flats</h3>
-      <p>Total Flats: {{ tower()?.total_flats ?? flatsData().length }} | Available Flats: {{ tower()?.available_flats_count ?? 'N/A' }}</p>
-    </header>
-    @if (flatsData().length === 0 && !isLoading() && !error()) {
-      <section class="state-card">
-        <p>No flats found for this tower.</p>
-      </section>
-    }
-
-    <div class="flats-list">
-      @for (flat of flatsData(); track flat.id) {
+  @if (isLoading()) {
+    <section class="flats-list">
+      @for (item of [1, 2, 3]; track item) {
         <article class="flat-card">
-          @if (flat.picture_url) {
-            <img class="flat-image clickable-image" [src]="flat.picture_url" [alt]="flat.flat_number + ' flat image'" (click)="openImagePreview(flat.picture_url); $event.stopPropagation()" />
-          } @else {
-            <div class="flat-image-placeholder">No Image</div>
-          }
-
-          <div
-            class="flat-content"
-            role="button"
-            tabindex="0"
-            (click)="openFlatDetail(flat.id)"
-            (keydown.enter)="openFlatDetail(flat.id)"
-            (keydown.space)="openFlatDetail(flat.id); $event.preventDefault()"
-            aria-label="Open details for flat {{ flat.flat_number }}"
-          >
-            <h4>{{ flat.flat_number }}</h4>
-            <div class="flat-meta-table">
-              <p><span>Flat ID</span><strong>{{ flat.id }}</strong></p>
-              <p><span>Floor</span><strong>{{ flat.floor_number }}</strong></p>
-              <p><span>BHK Type</span><strong>{{ flat.bhk_type }}</strong></p>
-              <p><span>Area</span><strong>{{ flat.area_sqft }} sqft</strong></p>
-              <p><span>Rent</span><strong>{{ flat.rent_amount }}</strong></p>
-              <p><span>Security Deposit</span><strong>{{ flat.security_deposit }}</strong></p>
-              <p class="meta-full"><span>Status</span><strong>{{ flat.is_available ? 'Available' : 'Not Available' }}</strong></p>
-            </div>
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+          </div>
+          <div class="skeleton-block skeleton-image"></div>
+          <div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
           </div>
         </article>
       }
-    </div>
+    </section>
+  }
+
+  <section class="flats-list">
+    @for (flat of flatsData(); track flat.id) {
+      <article
+        class="flat-card"
+        role="button"
+        tabindex="0"
+        (click)="openFlatDetail(flat.id)"
+        (keydown.enter)="openFlatDetail(flat.id)"
+        (keydown.space)="openFlatDetail(flat.id); $event.preventDefault()"
+        aria-label="Open details for flat {{ flat.flat_number }}"
+      >
+        <h3 class="flat-title">{{ flat.flat_number }}</h3>
+        @if (flat.picture_url) {
+          <img class="flat-image" [src]="flat.picture_url" [alt]="flat.flat_number + ' flat image'" />
+        } @else {
+          <div class="flat-image-placeholder">No Image</div>
+        }
+
+        <div class="flat-content">
+          <div class="flat-meta-table">
+            <p><span>Flat Number</span><strong>{{ flat.flat_number }}</strong></p>
+            <p><span>Floor</span><strong>{{ flat.floor_number }}</strong></p>
+            <p><span>BHK Type</span><strong>{{ flat.bhk_type }}</strong></p>
+            <p><span>Area</span><strong>{{ flat.area_sqft }} sqft</strong></p>
+            <p><span>Rent</span><strong>Rs {{ flat.rent_amount }}</strong></p>
+            <p><span>Security Deposit</span><strong>Rs {{ flat.security_deposit }}</strong></p>
+            <p><span>Status</span><strong class="status-chip" [class.available]="flat.is_available" [class.unavailable]="!flat.is_available">{{ flat.is_available ? 'Available' : 'Not Available' }}</strong></p>
+          </div>
+        </div>
+      </article>
+    }
   </section>
 </article>
+
+@if (isAmenitiesModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAmenitiesModal()">
+    <article class="action-modal amenities-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>{{ building()?.name ?? 'Building' }} Amenities</h3>
+        <button type="button" class="view-btn ghost" (click)="closeAmenitiesModal()">Close</button>
+      </header>
+      <div class="modal-content">
+        @if (isAmenitiesModalLoading()) {
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-image"></div>
+          </div>
+        }
+
+        @if (amenitiesModalError()) {
+          <p class="error-text">{{ amenitiesModalError() }}</p>
+        }
+
+        @if (!isAmenitiesModalLoading() && !amenitiesModalError() && amenitiesModalData().length === 0) {
+          <p class="amenity-desc">No amenities found for this building.</p>
+        }
+
+        @if (amenitiesModalData().length > 0) {
+          <p class="building-name-line"><strong>Building:</strong> {{ building()?.name ?? 'N/A' }}</p>
+          <div class="amenities-list">
+            @for (amenity of amenitiesModalData(); track amenity.name + '-' + $index) {
+              <article class="amenity-card">
+                @if (amenity.picture_url) {
+                  <img class="amenity-image" [src]="amenity.picture_url" [alt]="amenity.name + ' image'" />
+                } @else {
+                  <div class="amenity-image-placeholder">No Image</div>
+                }
+
+                <div class="amenity-content">
+                  <h4>{{ amenity.name }}</h4>
+                  <p class="amenity-description"><strong>Description:</strong> {{ amenity.description ?? 'No description' }}</p>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </div>
+    </article>
+  </section>
+}

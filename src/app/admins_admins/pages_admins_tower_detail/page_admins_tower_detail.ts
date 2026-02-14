@@ -37,7 +37,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   private readonly authState = inject(UsersAuthState);
   private readonly imagePreviewState = inject(ImagePreviewState);
 
-  protected readonly apiBaseUrl = signal('http://127.0.0.1:5000');
+  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
   protected readonly buildingId = signal<number | null>(null);
   protected readonly towerId = signal<number | null>(null);
   protected readonly isLoading = signal(false);

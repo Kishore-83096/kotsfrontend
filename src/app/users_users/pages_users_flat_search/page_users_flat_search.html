@@ -1,151 +1,171 @@
-﻿<article class="search-page-shell">
-  <header class="search-header">
-    <h2>Search</h2>
-    <p>Use tabs to search flats or buildings by area details.</p>
+<article class="search-page-shell">
+  <header class="content-header">
+    <div class="header-layout">
+      <section class="header-info">
+        <h2>Search Flats and Buildings</h2>
+        <p>Use filters to search by area details and availability.</p>
+        @if (!isLoading()) {
+          <p class="header-total-line">
+            @if (tab() === 'building') {
+              Total buildings: {{ total() }}
+            } @else {
+              Total flats: {{ total() }}
+            }
+          </p>
+        }
+      </section>
+    </div>
+
+    <section class="search-form-card">
+      <button
+        type="button"
+        class="search-dropdown-toggle"
+        (click)="toggleSearchDropdown()"
+        [attr.aria-expanded]="isSearchDropdownOpen()"
+        aria-controls="search-form-dropdown-content"
+      >
+        <span>{{ isSearchDropdownOpen() ? 'Hide Search Filters' : 'Show Search Filters' }}</span>
+        <strong>{{ isSearchDropdownOpen() ? '^' : 'v' }}</strong>
+      </button>
+
+      @if (isSearchDropdownOpen()) {
+        <div id="search-form-dropdown-content" class="search-dropdown-content">
+          <div class="tab-row" role="tablist" aria-label="Search Type">
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active-tab]="tab() === 'flat'"
+              role="tab"
+              [attr.aria-selected]="tab() === 'flat'"
+              (click)="setTab('flat')"
+            >
+              Search Flats
+            </button>
+            <button
+              type="button"
+              class="tab-btn"
+              [class.active-tab]="tab() === 'building'"
+              role="tab"
+              [attr.aria-selected]="tab() === 'building'"
+              (click)="setTab('building')"
+            >
+              Search Buildings
+            </button>
+          </div>
+
+          <div class="filters-grid">
+            @if (tab() === 'building') {
+              <label>
+                <span>Building Name</span>
+                <input type="text" [value]="buildingName()" (input)="setBuildingName($any($event.target).value)" placeholder="Skyline Residency" />
+              </label>
+            }
+
+            <label>
+              <span>Address</span>
+              <input type="text" [value]="address()" (input)="setAddress($any($event.target).value)" placeholder="Madhapur" />
+            </label>
+            <label>
+              <span>City</span>
+              <input type="text" [value]="city()" (input)="setCity($any($event.target).value)" placeholder="Hyderabad" />
+            </label>
+            <label>
+              <span>State</span>
+              <input type="text" [value]="state()" (input)="setState($any($event.target).value)" placeholder="Telangana" />
+            </label>
+
+            @if (tab() === 'flat') {
+              <label>
+                <span>Flat Type</span>
+                <input type="text" [value]="flatType()" (input)="setFlatType($any($event.target).value)" placeholder="2BHK" />
+              </label>
+              <label>
+                <span>Min Rent</span>
+                <input type="number" min="0" [value]="minRent()" (input)="setMinRent($any($event.target).value)" placeholder="15000" />
+              </label>
+              <label>
+                <span>Max Rent</span>
+                <input type="number" min="0" [value]="maxRent()" (input)="setMaxRent($any($event.target).value)" placeholder="30000" />
+              </label>
+            }
+          </div>
+
+          <div class="search-actions">
+            @if (tab() === 'flat') {
+              <label class="checkbox-field">
+                <input type="checkbox" [checked]="availableOnly()" (change)="setAvailableOnly($any($event.target).checked)" />
+                <span>Available only</span>
+              </label>
+            }
+            <button type="button" class="action-btn primary" (click)="submitSearch()" [disabled]="isLoading()">
+              @if (isLoading()) {
+                Searching...
+              } @else {
+                Search
+              }
+            </button>
+            <button type="button" class="action-btn secondary" (click)="clearFilters()" [disabled]="isLoading()">
+              Clear
+            </button>
+          </div>
+        </div>
+      }
+    </section>
   </header>
 
-  <section class="search-form-card">
-    <div class="tab-row" role="tablist" aria-label="Search Type">
-      <button
-        type="button"
-        class="tab-btn"
-        [class.active-tab]="tab() === 'flat'"
-        role="tab"
-        [attr.aria-selected]="tab() === 'flat'"
-        (click)="setTab('flat')"
-      >
-        Search Flats
-      </button>
-      <button
-        type="button"
-        class="tab-btn"
-        [class.active-tab]="tab() === 'building'"
-        role="tab"
-        [attr.aria-selected]="tab() === 'building'"
-        (click)="setTab('building')"
-      >
-        Search Buildings
-      </button>
-    </div>
-
-    <div class="filters-grid">
-      @if (tab() === 'building') {
-        <label>
-          <span>Building Name</span>
-          <input type="text" [value]="buildingName()" (input)="setBuildingName($any($event.target).value)" placeholder="Skyline Residency" />
-        </label>
-      }
-
-      <label>
-        <span>Address</span>
-        <input type="text" [value]="address()" (input)="setAddress($any($event.target).value)" placeholder="Madhapur" />
-      </label>
-      <label>
-        <span>City</span>
-        <input type="text" [value]="city()" (input)="setCity($any($event.target).value)" placeholder="Hyderabad" />
-      </label>
-      <label>
-        <span>State</span>
-        <input type="text" [value]="state()" (input)="setState($any($event.target).value)" placeholder="Telangana" />
-      </label>
-
-      @if (tab() === 'flat') {
-        <label>
-          <span>Flat Type</span>
-          <input type="text" [value]="flatType()" (input)="setFlatType($any($event.target).value)" placeholder="2BHK" />
-        </label>
-        <label>
-          <span>Min Rent</span>
-          <input type="number" min="0" [value]="minRent()" (input)="setMinRent($any($event.target).value)" placeholder="15000" />
-        </label>
-        <label>
-          <span>Max Rent</span>
-          <input type="number" min="0" [value]="maxRent()" (input)="setMaxRent($any($event.target).value)" placeholder="30000" />
-        </label>
-      }
-    </div>
-
-    <div class="search-actions">
-      @if (tab() === 'flat') {
-        <label class="checkbox-field">
-          <input type="checkbox" [checked]="availableOnly()" (change)="setAvailableOnly($any($event.target).checked)" />
-          <span>Available only</span>
-        </label>
-      }
-      <button type="button" class="action-btn primary" (click)="submitSearch()" [disabled]="isLoading()">
-        @if (isLoading()) {
-          Searching...
-        } @else {
-          Search
-        }
-      </button>
-      <button type="button" class="action-btn secondary" (click)="clearFilters()" [disabled]="isLoading()">
-        Clear
-      </button>
-    </div>
-  </section>
-
   @if (error()) {
-    <section class="result-card">
+    <section class="state-card error">
       <p class="error-text">{{ error() }}</p>
     </section>
   }
 
-  @if (!isLoading()) {
-    <p class="result-count">
-      @if (tab() === 'building') {
-        Total buildings: {{ total() }}
-      } @else {
-        Total flats: {{ total() }}
-      }
-    </p>
-  }
-
   @if (isLoading()) {
-    <section class="results-grid">
+    <section class="results-list">
       @for (item of [1, 2, 3, 4]; track item) {
-        <article class="flat-card">
+        <article class="result-row-card">
           <div class="skeleton-block skeleton-image"></div>
-          <div class="skeleton-block skeleton-line lg"></div>
-          <div class="skeleton-block skeleton-line"></div>
-          <div class="skeleton-block skeleton-line"></div>
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </div>
         </article>
       }
     </section>
   }
 
   @if (!isLoading() && tab() === 'flat' && items().length === 0 && !error()) {
-    <section class="result-card">
+    <section class="state-card">
       <p>No flats matched your filters.</p>
     </section>
   }
 
   @if (!isLoading() && tab() === 'building' && buildingItems().length === 0 && !error()) {
-    <section class="result-card">
+    <section class="state-card">
       <p>No buildings matched your filters.</p>
     </section>
   }
 
   @if (tab() === 'flat') {
-    <section class="results-grid">
+    <section class="results-list">
       @for (item of items(); track item.flat.id) {
-        <article class="flat-card" role="button" tabindex="0" (click)="openFlatDetail(item)" (keydown.enter)="openFlatDetail(item)" (keydown.space)="openFlatDetail(item); $event.preventDefault()">
+        <article class="result-row-card" role="button" tabindex="0" (click)="openFlatDetail(item)" (keydown.enter)="openFlatDetail(item)" (keydown.space)="openFlatDetail(item); $event.preventDefault()">
           @if (item.flat.picture_url; as flatPictureUrl) {
             <img class="result-image" [src]="flatPictureUrl" alt="Flat image" />
           } @else {
             <div class="result-image result-image-placeholder">No Flat Image</div>
           }
-          <div class="flat-top">
-            <h3>{{ item.flat.flat_number }} | {{ item.flat.bhk_type }}</h3>
-            <span class="rent-chip">Rs {{ item.flat.rent_amount }}</span>
-          </div>
-          <p class="location">{{ item.building.full_address ?? (item.building.address + ', ' + item.building.city + ', ' + item.building.state + ', ' + item.building.pincode) }}</p>
-          <div class="meta">
-            <span>Building: {{ item.building.name }}</span>
-            <span>Tower: {{ item.tower.name }}</span>
-            <span>Floor: {{ item.flat.floor_number }}</span>
-            <span>Area: {{ item.flat.area_sqft }} sqft</span>
-            <span>Status: {{ item.flat.is_available ? 'Available' : 'Unavailable' }}</span>
+          <div class="result-content">
+            <h3 class="result-title">{{ item.flat.flat_number }} | {{ item.flat.bhk_type }}</h3>
+            <div class="result-meta-table">
+              <p><span>Rent</span><strong>Rs {{ item.flat.rent_amount }}</strong></p>
+              <p><span>Building</span><strong>{{ item.building.name }}</strong></p>
+              <p><span>Tower</span><strong>{{ item.tower.name }}</strong></p>
+              <p><span>Floor</span><strong>{{ item.flat.floor_number }}</strong></p>
+              <p><span>Area</span><strong>{{ item.flat.area_sqft }} sqft</strong></p>
+              <p><span>Status</span><strong class="status-chip" [class.available]="item.flat.is_available" [class.unavailable]="!item.flat.is_available">{{ item.flat.is_available ? 'Available' : 'Unavailable' }}</strong></p>
+              <p><span>Address</span><strong>{{ item.building.full_address ?? (item.building.address + ', ' + item.building.city + ', ' + item.building.state + ', ' + item.building.pincode) }}</strong></p>
+            </div>
           </div>
         </article>
       }
@@ -153,24 +173,24 @@
   }
 
   @if (tab() === 'building') {
-    <section class="results-grid">
+    <section class="results-list">
       @for (building of buildingItems(); track building.id) {
-        <article class="flat-card" role="button" tabindex="0" (click)="openBuildingTowers(building)" (keydown.enter)="openBuildingTowers(building)" (keydown.space)="openBuildingTowers(building); $event.preventDefault()">
+        <article class="result-row-card" role="button" tabindex="0" (click)="openBuildingTowers(building)" (keydown.enter)="openBuildingTowers(building)" (keydown.space)="openBuildingTowers(building); $event.preventDefault()">
           @if (building.picture_url; as buildingPictureUrl) {
             <img class="result-image" [src]="buildingPictureUrl" alt="Building image" />
           } @else {
             <div class="result-image result-image-placeholder">No Building Image</div>
           }
-          <div class="flat-top">
-            <h3>{{ building.name }}</h3>
-          </div>
-          <p class="location">{{ building.full_address ?? (building.address + ', ' + building.city + ', ' + building.state + ', ' + building.pincode) }}</p>
-          <div class="meta">
-            <span>City: {{ building.city }}</span>
-            <span>State: {{ building.state }}</span>
-            <span>Towers: {{ building.towers_count ?? 0 }}</span>
-            <span>Flats: {{ building.flats_count ?? 0 }}</span>
-            <span>Available Flats: {{ building.available_flats_count ?? 0 }}</span>
+          <div class="result-content">
+            <h3 class="result-title">{{ building.name }}</h3>
+            <div class="result-meta-table">
+              <p><span>Address</span><strong>{{ building.full_address ?? (building.address + ', ' + building.city + ', ' + building.state + ', ' + building.pincode) }}</strong></p>
+              <p><span>City</span><strong>{{ building.city }}</strong></p>
+              <p><span>State</span><strong>{{ building.state }}</strong></p>
+              <p><span>Towers</span><strong>{{ building.towers_count ?? 0 }}</strong></p>
+              <p><span>Total Flats</span><strong>{{ building.flats_count ?? 0 }}</strong></p>
+              <p><span>Available Flats</span><strong>{{ building.available_flats_count ?? 0 }}</strong></p>
+            </div>
           </div>
         </article>
       }

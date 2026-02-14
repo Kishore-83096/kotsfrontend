@@ -1,10 +1,18 @@
 <article class="bookings-page">
-  <header class="page-header">
-    <div>
+  <header class="content-header">
+    <div class="header-layout">
+      <section class="header-info">
       <h2>My Bookings</h2>
-    </div>
-    <div class="header-actions">
-      <a class="action-btn ghost" routerLink="/home">Back To Home</a>
+      <p>Browse your booking history and status.</p>
+      @if (!isLoading()) {
+        <p class="header-total-line">Total Bookings: {{ bookingsData().length }}</p>
+      }
+      </section>
+      <div class="header-actions-block">
+        <div class="header-meta-actions">
+          <a class="action-btn ghost header-inline-btn" routerLink="/home">Back To Home</a>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -23,11 +31,16 @@
   @if (isLoading()) {
     <section class="bookings-grid">
       @for (item of [1, 2, 3]; track item) {
-        <article class="booking-card-home">
+        <article class="booking-card">
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+          </div>
           <div class="skeleton-block skeleton-image"></div>
-          <div class="skeleton-block skeleton-line lg"></div>
-          <div class="skeleton-block skeleton-line"></div>
-          <div class="skeleton-block skeleton-line"></div>
+          <div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </div>
         </article>
       }
     </section>
@@ -35,7 +48,8 @@
 
   <section class="bookings-grid">
     @for (booking of bookingsData(); track booking.id) {
-      <article class="booking-card-home">
+      <article class="booking-card">
+        <h3 class="booking-title">{{ booking.flat?.flat_number ?? 'Booked Flat' }}</h3>
         @if (flatPreviewForBooking(booking.id)?.flat?.picture_url; as flatPictureUrl) {
           <img class="booking-image" [src]="flatPictureUrl" alt="Flat image" />
         } @else {
@@ -43,18 +57,16 @@
         }
 
         <div class="booking-content">
-          <h3>{{ booking.flat?.flat_number ?? 'Booked Flat' }}</h3>
-          <p class="booking-address">{{ booking.building_full_address ?? 'Address not available' }}</p>
-
           <div class="booking-meta-table">
-            <p><span>Status</span><strong>{{ booking.status }}</strong></p>
+            <p><span>Status</span><strong class="status-chip">{{ booking.status }}</strong></p>
             <p><span>Building</span><strong>{{ booking.building?.name ?? 'N/A' }}</strong></p>
             <p><span>Tower</span><strong>{{ booking.tower?.name ?? 'N/A' }}</strong></p>
-            <p><span>Rent</span><strong>{{ flatPreviewForBooking(booking.id)?.flat?.rent_amount ?? 'N/A' }}</strong></p>
-            <p><span>Deposit</span><strong>{{ booking.security_deposit ?? flatPreviewForBooking(booking.id)?.flat?.security_deposit ?? 'N/A' }}</strong></p>
-            <p><span>Paid</span><strong>{{ booking.paid === true ? 'Yes' : 'No' }}</strong></p>
+            <p><span>Rent</span><strong>Rs {{ flatPreviewForBooking(booking.id)?.flat?.rent_amount ?? 'N/A' }}</strong></p>
+            <p><span>Deposit</span><strong>Rs {{ booking.security_deposit ?? flatPreviewForBooking(booking.id)?.flat?.security_deposit ?? 'N/A' }}</strong></p>
+            <p><span>Paid</span><strong class="paid-chip" [class.yes]="booking.paid === true" [class.no]="booking.paid !== true">{{ booking.paid === true ? 'Yes' : 'No' }}</strong></p>
             <p><span>Manager</span><strong>{{ booking.manager?.name ?? 'N/A' }}</strong></p>
             <p><span>Manager Phone</span><strong>{{ booking.manager?.phone ?? 'N/A' }}</strong></p>
+            <p><span>Address</span><strong>{{ booking.building_full_address ?? 'Address not available' }}</strong></p>
           </div>
 
           <button type="button" class="view-btn" (click)="openBookingDetailModal(booking.id)">View Details</button>
