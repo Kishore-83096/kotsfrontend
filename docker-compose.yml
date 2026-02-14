@@ -1,0 +1,9 @@
+services:
+  frontend:
+    container_name: kots-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    restart: unless-stopped

@@ -43,9 +43,6 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Docker and env files
-.dockerignore
-Dockerfile*
-docker-compose*.yml
+# Env files
 .env
 .env.*
