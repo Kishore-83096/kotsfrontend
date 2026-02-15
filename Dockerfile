@@ -13,6 +13,7 @@ FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/kots_frontend/browser /usr/share/nginx/html
 
+EXPOSE 80
 EXPOSE 10000
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "echo 'Frontend is running. Open: http://127.0.0.1:4200 or http://127.0.0.1:10000'; nginx -g 'daemon off;'"]
