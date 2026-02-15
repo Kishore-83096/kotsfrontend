@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpErrorResponse, HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -21,7 +22,7 @@ export class PageMasterComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly isLoadingAdmins = signal(false);
   protected readonly pageError = signal<string | null>(null);
   protected readonly adminsResponse = signal<MasterAdminsResponseEnvelope | null>(null);
@@ -216,3 +217,7 @@ export class PageMasterComponent implements OnInit {
     return envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? fallback;
   }
 }
+
+
+
+

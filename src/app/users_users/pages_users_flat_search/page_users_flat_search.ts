@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,7 +28,7 @@ export class PageUsersFlatSearchComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly response = signal<UsersFlatSearchResponseEnvelopeUsers | null>(null);
   protected readonly buildingResponse = signal<UsersBuildingSearchResponseEnvelopeUsers | null>(null);
   protected readonly isLoading = signal(false);
@@ -264,3 +265,7 @@ export class PageUsersFlatSearchComponent implements OnInit {
     return params;
   }
 }
+
+
+
+

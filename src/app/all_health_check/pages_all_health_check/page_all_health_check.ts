@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
@@ -20,7 +21,7 @@ type CombinedHealthStatus = HealthStatusUsers | HealthStatusAdmins | HealthStatu
 export class PageAllHealthCheckComponent implements OnInit {
   private readonly http = inject(HttpClient);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly isChecking = signal(false);
   protected readonly checkedAt = signal<string | null>(null);
   protected readonly pageError = signal<string | null>(null);
@@ -51,3 +52,7 @@ export class PageAllHealthCheckComponent implements OnInit {
     });
   }
 }
+
+
+
+

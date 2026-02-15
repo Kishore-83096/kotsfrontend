@@ -237,3 +237,5 @@ export type AdminDeleteAmenityResponseEnvelopeAdmins = AuthEnvelopeAdmins<{ id: 
 export type AdminBookingsListResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminBookingItemAdmins[]>;
 export type AdminBookingDetailResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminBookingItemAdmins>;
 export type AdminUpdateBookingStatusResponseEnvelopeAdmins = AuthEnvelopeAdmins<UpdateBookingStatusDataAdmins>;
+
+

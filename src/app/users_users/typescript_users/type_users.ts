@@ -263,3 +263,5 @@ export type UsersBookingsResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBookingL
 export type UsersBookingDetailResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBookingListItemUsers>;
 export type UsersBuildingAmenitiesResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBuildingAmenitiesDataUsers>;
 export type UsersBuildingAmenityDetailResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBuildingAmenityDetailDataUsers>;
+
+

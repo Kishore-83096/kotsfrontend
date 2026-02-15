@@ -72,3 +72,5 @@ export interface HealthStatusMaster {
 export type MasterAdminsResponseEnvelope = MasterEnvelope<MasterAdminsListData>;
 export type MasterCreateAdminResponseEnvelope = MasterEnvelope<CreateAdminDataMaster>;
 export type MasterAdminDetailResponseEnvelope = MasterEnvelope<MasterAdminDetailData>;
+
+

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -37,7 +38,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   private readonly authState = inject(UsersAuthState);
   private readonly imagePreviewState = inject(ImagePreviewState);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly buildingId = signal<number | null>(null);
   protected readonly towerId = signal<number | null>(null);
   protected readonly isLoading = signal(false);
@@ -915,3 +916,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.selectedAmenityIds.set([]);
   }
 }
+
+
+
+

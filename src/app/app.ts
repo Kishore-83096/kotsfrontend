@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './shared/app_env';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, WritableSignal, computed, effect, inject, signal } from '@angular/core';
@@ -35,7 +36,7 @@ export class App {
   private readonly document = inject(DOCUMENT);
   private readonly viewportWindow = this.document.defaultView;
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly isLoggingOut = signal(false);
   protected readonly isLoadingUserData = signal(false);
   protected readonly userDataError = signal<string | null>(null);
@@ -758,3 +759,7 @@ export class App {
     body?.classList.toggle('device-desktop', mode === 'desktop');
   }
 }
+
+
+
+

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,7 +19,7 @@ export class PageUsersLoginComponent {
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly isSubmitting = signal(false);
   protected readonly formError = signal<string | null>(null);
 
@@ -54,3 +55,7 @@ export class PageUsersLoginComponent {
     return envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? fallback;
   }
 }
+
+
+
+

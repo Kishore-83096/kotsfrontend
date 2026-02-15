@@ -45,3 +45,5 @@ export const routes: Routes = [
   { path: 'master', component: PageMasterComponent, resolve: { prefetch: masterHomePrefetchResolver } },
   { path: '**', redirectTo: '' },
 ];
+
+

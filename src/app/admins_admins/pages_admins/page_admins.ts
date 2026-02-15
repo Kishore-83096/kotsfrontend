@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -32,7 +33,7 @@ export class PageAdminsComponent implements OnInit {
   private readonly authState = inject(UsersAuthState);
   private readonly imagePreviewState = inject(ImagePreviewState);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly isLoadingBuildings = signal(false);
   protected readonly isCreatingBuilding = signal(false);
   protected readonly pageError = signal<string | null>(null);
@@ -390,3 +391,7 @@ export class PageAdminsComponent implements OnInit {
     target.set(file ? URL.createObjectURL(file) : null);
   }
 }
+
+
+
+

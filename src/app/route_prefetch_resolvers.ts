@@ -1,10 +1,11 @@
+import { API_BASE_URL as APP_API_BASE_URL } from './shared/app_env';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, ResolveFn, Router, UrlTree } from '@angular/router';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { UsersAuthState } from './users_users/state_users_auth';
 
-const API_BASE_URL = 'https://kots.onrender.com';
+const API_BASE_URL = APP_API_BASE_URL;
 
 function normalizeToken(token: string): string {
   const trimmed = token.trim();
@@ -253,3 +254,7 @@ export const masterHomePrefetchResolver: ResolveFn<true | UrlTree> = () => {
       catchError((error: unknown) => of(unauthorizedToLogin(error, authState, router))),
     );
 };
+
+
+
+

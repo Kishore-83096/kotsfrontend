@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -22,7 +23,7 @@ export class PageUsersBookingsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly authState = inject(UsersAuthState);
 
-  protected readonly apiBaseUrl = signal('https://kots.onrender.com');
+  protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly isLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly bookingsResponse = signal<UsersBookingsResponseEnvelopeUsers | null>(null);
@@ -169,3 +170,7 @@ export class PageUsersBookingsComponent implements OnInit {
     });
   }
 }
+
+
+
+
