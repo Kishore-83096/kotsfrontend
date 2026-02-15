@@ -4,20 +4,25 @@ import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   createAdminFlatApi,
+  createAdminFlatPictureApi,
   deleteAdminFlatApi,
+  deleteAdminFlatPictureApi,
   deleteAdminTowerApi,
+  getAdminFlatPicturesApi,
   getAdminBuildingAmenitiesApi,
   getAdminFlatByIdApi,
   getAdminTowerByIdApi,
   getAdminTowerFlatsApi,
   setAdminFlatAmenitiesApi,
   updateAdminFlatApi,
+  updateAdminFlatPictureApi,
   updateAdminTowerApi,
 } from '../api_admins';
 import { UsersAuthState } from '../../users_users/state_users_auth';
 import {
   AdminAmenityItemAdmins,
   AdminFlatItemAdmins,
+  AdminFlatPictureItemAdmins,
   AdminFlatDetailResponseEnvelopeAdmins,
   AdminTowerDetailResponseEnvelopeAdmins,
   AdminTowerFlatsResponseEnvelopeAdmins,
@@ -99,6 +104,25 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected readonly linkAmenitiesFlatId = signal<number | null>(null);
   protected readonly linkAmenitiesList = signal<AdminAmenityItemAdmins[]>([]);
   protected readonly selectedAmenityIds = signal<number[]>([]);
+
+  protected readonly isFlatPicturesModalOpen = signal(false);
+  protected readonly flatPicturesFlatId = signal<number | null>(null);
+  protected readonly flatPictures = signal<AdminFlatPictureItemAdmins[]>([]);
+  protected readonly isLoadingFlatPictures = signal(false);
+  protected readonly flatPicturesModalError = signal<string | null>(null);
+  protected readonly flatPicturesModalMessage = signal<string | null>(null);
+
+  protected readonly addFlatPictureRoomName = signal('');
+  protected readonly addFlatRoomPictureFile = signal<File | null>(null);
+  protected readonly addFlatRoomPictureFilePreviewUrl = signal<string | null>(null);
+  protected readonly isAddingFlatPicture = signal(false);
+
+  protected readonly editingPictureId = signal<number | null>(null);
+  protected readonly editFlatPictureRoomName = signal('');
+  protected readonly editFlatPictureFile = signal<File | null>(null);
+  protected readonly editFlatPictureFilePreviewUrl = signal<string | null>(null);
+  protected readonly isUpdatingPictureId = signal<number | null>(null);
+  protected readonly deletingPictureId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -830,6 +854,216 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.imagePreviewState.open(imageUrl);
   }
 
+  protected openFlatPicturesModal(flatId: number): void {
+    this.isFlatPicturesModalOpen.set(true);
+    this.flatPicturesFlatId.set(flatId);
+    this.flatPictures.set([]);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
+    this.addFlatPictureRoomName.set('');
+    this.addFlatRoomPictureFile.set(null);
+    this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, null);
+    this.cancelEditFlatPicture();
+    this.loadFlatPictures(flatId);
+  }
+
+  protected closeFlatPicturesModal(): void {
+    this.isFlatPicturesModalOpen.set(false);
+    this.flatPicturesFlatId.set(null);
+    this.flatPictures.set([]);
+    this.isLoadingFlatPictures.set(false);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
+    this.addFlatPictureRoomName.set('');
+    this.addFlatRoomPictureFile.set(null);
+    this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, null);
+    this.cancelEditFlatPicture();
+    this.isAddingFlatPicture.set(false);
+    this.isUpdatingPictureId.set(null);
+    this.deletingPictureId.set(null);
+  }
+
+  protected setAddFlatPictureRoomName(value: string): void {
+    this.addFlatPictureRoomName.set(value);
+  }
+
+  protected onAddFlatPictureFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement | null;
+    const file = target?.files?.[0] ?? null;
+    this.addFlatRoomPictureFile.set(file);
+    this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, file);
+  }
+
+  protected addFlatPicture(): void {
+    const token = this.authState.accessToken();
+    const flatId = this.flatPicturesFlatId();
+    const roomName = this.addFlatPictureRoomName().trim();
+    const file = this.addFlatRoomPictureFile();
+
+    if (!token) {
+      this.flatPicturesModalError.set('No active session found. Please login again.');
+      return;
+    }
+    if (flatId === null) {
+      this.flatPicturesModalError.set('Flat id is missing.');
+      return;
+    }
+    if (!roomName) {
+      this.flatPicturesModalError.set('Room name is required.');
+      return;
+    }
+    if (!file) {
+      this.flatPicturesModalError.set('Picture file is required.');
+      return;
+    }
+
+    this.isAddingFlatPicture.set(true);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
+
+    createAdminFlatPictureApi(this.http, this.apiBaseUrl(), token, flatId, roomName, file).subscribe({
+      next: (response) => {
+        this.isAddingFlatPicture.set(false);
+        this.flatPicturesModalMessage.set(response.message || 'Flat picture created.');
+        this.addFlatPictureRoomName.set('');
+        this.addFlatRoomPictureFile.set(null);
+        this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, null);
+        this.loadFlatPictures(flatId);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+          this.isAddingFlatPicture.set(false);
+          return;
+        }
+        this.flatPicturesModalError.set(this.extractErrorMessage(error, 'Failed to create flat picture.'));
+        this.isAddingFlatPicture.set(false);
+      },
+    });
+  }
+
+  protected startEditFlatPicture(picture: AdminFlatPictureItemAdmins): void {
+    this.editingPictureId.set(picture.id);
+    this.editFlatPictureRoomName.set(picture.room_name ?? '');
+    this.editFlatPictureFile.set(null);
+    this.replacePreviewUrl(this.editFlatPictureFilePreviewUrl, null);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
+  }
+
+  protected cancelEditFlatPicture(): void {
+    this.editingPictureId.set(null);
+    this.editFlatPictureRoomName.set('');
+    this.editFlatPictureFile.set(null);
+    this.replacePreviewUrl(this.editFlatPictureFilePreviewUrl, null);
+  }
+
+  protected setEditFlatPictureRoomName(value: string): void {
+    this.editFlatPictureRoomName.set(value);
+  }
+
+  protected onEditFlatPictureFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement | null;
+    const file = target?.files?.[0] ?? null;
+    this.editFlatPictureFile.set(file);
+    this.replacePreviewUrl(this.editFlatPictureFilePreviewUrl, file);
+  }
+
+  protected updateFlatPicture(pictureId: number): void {
+    const token = this.authState.accessToken();
+    const flatId = this.flatPicturesFlatId();
+    const roomName = this.editFlatPictureRoomName().trim();
+    const file = this.editFlatPictureFile();
+
+    if (!token) {
+      this.flatPicturesModalError.set('No active session found. Please login again.');
+      return;
+    }
+    if (flatId === null) {
+      this.flatPicturesModalError.set('Flat id is missing.');
+      return;
+    }
+    if (!roomName && !file) {
+      this.flatPicturesModalError.set('Provide room name or picture file to update.');
+      return;
+    }
+
+    this.isUpdatingPictureId.set(pictureId);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
+
+    updateAdminFlatPictureApi(
+      this.http,
+      this.apiBaseUrl(),
+      token,
+      flatId,
+      pictureId,
+      roomName ? { room_name: roomName } : {},
+      file,
+    ).subscribe({
+      next: (response) => {
+        this.isUpdatingPictureId.set(null);
+        this.flatPicturesModalMessage.set(response.message || 'Flat picture updated.');
+        this.cancelEditFlatPicture();
+        this.loadFlatPictures(flatId);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+          this.isUpdatingPictureId.set(null);
+          return;
+        }
+        this.flatPicturesModalError.set(this.extractErrorMessage(error, 'Failed to update flat picture.'));
+        this.isUpdatingPictureId.set(null);
+      },
+    });
+  }
+
+  protected deleteFlatPicture(pictureId: number): void {
+    const token = this.authState.accessToken();
+    const flatId = this.flatPicturesFlatId();
+    if (!token) {
+      this.flatPicturesModalError.set('No active session found. Please login again.');
+      return;
+    }
+    if (flatId === null) {
+      this.flatPicturesModalError.set('Flat id is missing.');
+      return;
+    }
+
+    const isConfirmed = confirm('Delete this flat picture permanently?');
+    if (!isConfirmed) {
+      return;
+    }
+
+    this.deletingPictureId.set(pictureId);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
+
+    deleteAdminFlatPictureApi(this.http, this.apiBaseUrl(), token, flatId, pictureId).subscribe({
+      next: (response) => {
+        this.deletingPictureId.set(null);
+        this.flatPicturesModalMessage.set(response.message || 'Flat picture deleted.');
+        if (this.editingPictureId() === pictureId) {
+          this.cancelEditFlatPicture();
+        }
+        this.loadFlatPictures(flatId);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+          this.deletingPictureId.set(null);
+          return;
+        }
+        this.flatPicturesModalError.set(this.extractErrorMessage(error, 'Failed to delete flat picture.'));
+        this.deletingPictureId.set(null);
+      },
+    });
+  }
+
   private loadBuildingAmenitiesForLinking(): void {
     const token = this.authState.accessToken();
     const buildingId = this.buildingId();
@@ -859,6 +1093,34 @@ export class PageAdminsTowerDetailComponent implements OnInit {
         }
         this.linkAmenitiesModalError.set(this.extractErrorMessage(error, 'Failed to fetch building amenities.'));
         this.isLoadingLinkAmenities.set(false);
+      },
+    });
+  }
+
+  private loadFlatPictures(flatId: number): void {
+    const token = this.authState.accessToken();
+    if (!token) {
+      this.flatPicturesModalError.set('No active session found. Please login again.');
+      return;
+    }
+
+    this.isLoadingFlatPictures.set(true);
+    this.flatPicturesModalError.set(null);
+
+    getAdminFlatPicturesApi(this.http, this.apiBaseUrl(), token, flatId).subscribe({
+      next: (response) => {
+        this.flatPictures.set(response.data ?? []);
+        this.isLoadingFlatPictures.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+          this.isLoadingFlatPictures.set(false);
+          return;
+        }
+        this.flatPicturesModalError.set(this.extractErrorMessage(error, 'Failed to fetch flat pictures.'));
+        this.isLoadingFlatPictures.set(false);
       },
     });
   }
@@ -908,12 +1170,25 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.addFlatModalError.set(null);
     this.updateFlatModalError.set(null);
     this.linkAmenitiesModalError.set(null);
+    this.flatPicturesModalError.set(null);
+    this.flatPicturesModalMessage.set(null);
     this.isLoadingFlatDetail.set(false);
     this.isLoadingLinkAmenities.set(false);
     this.isLinkingAmenities.set(false);
     this.linkAmenitiesFlatId.set(null);
     this.linkAmenitiesList.set([]);
     this.selectedAmenityIds.set([]);
+    this.isFlatPicturesModalOpen.set(false);
+    this.flatPicturesFlatId.set(null);
+    this.flatPictures.set([]);
+    this.isLoadingFlatPictures.set(false);
+    this.addFlatPictureRoomName.set('');
+    this.addFlatRoomPictureFile.set(null);
+    this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, null);
+    this.cancelEditFlatPicture();
+    this.isAddingFlatPicture.set(false);
+    this.isUpdatingPictureId.set(null);
+    this.deletingPictureId.set(null);
   }
 }
 

@@ -137,6 +137,18 @@ export interface AdminFlatItemAdmins {
   picture_public_id?: string | null;
   picture_folder?: string | null;
   amenity_ids?: number[];
+  flat_pictures?: AdminFlatPictureItemAdmins[];
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface AdminFlatPictureItemAdmins {
+  id: number;
+  flat_id: number;
+  room_name: string;
+  picture_url: string;
+  picture_public_id: string;
+  picture_folder: string;
   created_at: string;
   [key: string]: unknown;
 }
@@ -229,6 +241,10 @@ export type AdminTowerFlatsResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminFlat
 export type AdminFlatDetailResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminFlatItemAdmins>;
 export type AdminUpdateFlatResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminFlatItemAdmins>;
 export type AdminDeleteFlatResponseEnvelopeAdmins = AuthEnvelopeAdmins<{ id: number }>;
+export type AdminFlatPicturesResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminFlatPictureItemAdmins[]>;
+export type AdminCreateFlatPictureResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminFlatPictureItemAdmins>;
+export type AdminUpdateFlatPictureResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminFlatPictureItemAdmins>;
+export type AdminDeleteFlatPictureResponseEnvelopeAdmins = AuthEnvelopeAdmins<{ id: number; flat_id: number; room_name: string }>;
 export type AdminCreateAmenityResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminAmenityItemAdmins>;
 export type AdminUpdateAmenityResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminAmenityItemAdmins>;
 export type AdminBuildingAmenitiesResponseEnvelopeAdmins = AuthEnvelopeAdmins<AdminAmenityItemAdmins[]>;

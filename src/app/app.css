@@ -2,6 +2,7 @@
   --header-control-size: 42px;
   --auth-header-vertical-pad: 0.45rem;
   --auth-header-height: calc(var(--header-control-size) + (var(--auth-header-vertical-pad) * 2));
+  --auth-header-page-gap: 4px;
   display: block;
   height: 100vh;
   background: transparent;
@@ -241,7 +242,7 @@
 }
 
 .app-content.with-auth-header {
-  padding-top: var(--auth-header-height);
+  padding-top: calc(var(--auth-header-height) + var(--auth-header-page-gap));
 }
 
 .app-content.with-auth-header > * {
@@ -561,7 +562,8 @@
   inset: 0;
   z-index: 1300;
   display: grid;
-  place-items: center;
+  align-items: start;
+  justify-items: center;
   padding: 1rem;
   background: rgba(16, 12, 8, 0.84);
 }
@@ -573,6 +575,15 @@
   flex-direction: column;
   gap: 0.6rem;
   align-items: flex-end;
+  position: relative;
+  margin-top: 0.25rem;
+}
+
+.global-image-preview-shell .close-btn {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  align-self: flex-end;
 }
 
 .global-image-preview-full {

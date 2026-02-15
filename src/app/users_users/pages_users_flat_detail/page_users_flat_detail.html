@@ -1,4 +1,4 @@
-<article class="flat-detail-page">
+﻿<article class="flat-detail-page">
   <header class="content-header">
     <div class="header-layout">
       <section class="header-info">
@@ -84,16 +84,89 @@
   <section class="flat-images-section">
     <header class="section-header flat-images-section-header">
       <h3>Flat Images</h3>
-      <p>Total Images: {{ flat()?.picture_url ? 1 : 0 }}</p>
+      <p>Total Images: {{ galleryPictures().length }}</p>
     </header>
+    @if (flatPicturesError()) {
+      <p class="error-text">{{ flatPicturesError() }}</p>
+    }
+    @if (isLoadingFlatPictures()) {
+      <section class="state-card">
+        <div class="skeleton-block skeleton-line lg"></div>
+        <div class="skeleton-block skeleton-image"></div>
+      </section>
+    }
     <div class="flat-images-list">
-      <article class="flat-image-card">
-        @if (flat()?.picture_url) {
-          <img class="flat-gallery-image" [src]="flat()!.picture_url!" [alt]="(flat()?.flat_number ?? 'Flat') + ' image'" />
-        } @else {
-          <div class="flat-gallery-placeholder">No Flat Image</div>
+      @if (currentGalleryPicture(); as picture) {
+        <div class="gallery-slider-shell">
+          <div class="gallery-top-row">
+            <p class="gallery-title">{{ picture.room_name }}</p>
+            <p class="gallery-counter">{{ galleryIndex() + 1 }} / {{ galleryPictures().length }}</p>
+          </div>
+          <div class="flat-image-card">
+            <button
+              type="button"
+              class="gallery-nav-btn gallery-nav-prev"
+              (click)="goToPreviousGalleryPicture()"
+              [disabled]="galleryPictures().length <= 1"
+              aria-label="Previous image"
+            >
+              &#8249;
+            </button>
+            <div class="carousel-viewport">
+              <div class="carousel-track" #flatCarouselList (scroll)="onGalleryScroll()">
+                @for (slide of galleryPictures(); track slide.id; let idx = $index) {
+                  <article class="carousel-slide" #flatCarouselSlide [class.active]="isGalleryPictureActive(idx)">
+                    <img
+                      class="flat-gallery-image clickable-image"
+                      [src]="slide.picture_url"
+                      [alt]="slide.room_name + ' image'"
+                      (click)="openImageModal(slide.picture_url, slide.room_name)"
+                    />
+                  </article>
+                }
+              </div>
+            </div>
+            <button
+              type="button"
+              class="gallery-nav-btn gallery-nav-next"
+              (click)="goToNextGalleryPicture()"
+              [disabled]="galleryPictures().length <= 1"
+              aria-label="Next image"
+            >
+              &#8250;
+            </button>
+          </div>
+        </div>
+        @if (galleryPictures().length > 1) {
+          <div class="gallery-thumbs">
+            @for (dot of galleryPictures(); track dot.id; let idx = $index) {
+              <button
+                type="button"
+                class="gallery-thumb"
+                [class.active]="isGalleryPictureActive(idx)"
+                (click)="goToGalleryPicture(idx)"
+                [attr.aria-label]="'Go to image ' + (idx + 1)"
+              >
+                <img [src]="dot.picture_url" [alt]="dot.room_name + ' thumbnail'" />
+                <span>{{ dot.room_name }}</span>
+              </button>
+            }
+          </div>
         }
-      </article>
+      } @else {
+        <article class="flat-image-card">
+          @if (flat()?.picture_url) {
+            <img
+              class="flat-gallery-image clickable-image"
+              [src]="flat()!.picture_url!"
+              [alt]="(flat()?.flat_number ?? 'Flat') + ' image'"
+              (click)="openImageModal(flat()!.picture_url!, flat()?.flat_number ?? 'Flat Image')"
+            />
+          } @else {
+            <div class="flat-gallery-placeholder">No Flat Image</div>
+          }
+        </article>
+      }
     </div>
   </section>
 
@@ -197,3 +270,4 @@
     </article>
   </section>
 }
+

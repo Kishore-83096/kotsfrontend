@@ -195,7 +195,17 @@ export interface UsersFlatDetailDataUsers {
   flat: UserFlatListItemUsers;
   tower: { id: number; name: string };
   building: UserBuildingSummaryUsers;
+  pictures?: UserFlatPictureItemUsers[];
   amenities: BuildingAmenityUsers[];
+  [key: string]: unknown;
+}
+
+export interface UserFlatPictureItemUsers {
+  id: number;
+  flat_id: number;
+  room_name: string;
+  picture_url: string;
+  created_at: string;
   [key: string]: unknown;
 }
 
@@ -256,6 +266,7 @@ export type UsersBuildingTowersResponseEnvelopeUsers = AuthEnvelopeUsers<UserTow
 export type UsersTowerDetailResponseEnvelopeUsers = AuthEnvelopeUsers<UserTowerDetailDataUsers>;
 export type UsersTowerFlatsResponseEnvelopeUsers = AuthEnvelopeUsers<UsersTowerFlatsDataUsers>;
 export type UsersFlatDetailResponseEnvelopeUsers = AuthEnvelopeUsers<UsersFlatDetailDataUsers>;
+export type UsersFlatPicturesResponseEnvelopeUsers = AuthEnvelopeUsers<UserFlatPictureItemUsers[]>;
 export type UsersFlatSearchResponseEnvelopeUsers = AuthEnvelopeUsers<UsersFlatSearchDataUsers>;
 export type UsersBuildingSearchResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBuildingSearchDataUsers>;
 export type UsersCreateBookingResponseEnvelopeUsers = AuthEnvelopeUsers<UserBookingResponseDataUsers>;

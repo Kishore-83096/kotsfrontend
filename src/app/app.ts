@@ -402,6 +402,10 @@ export class App {
   protected onAppContentScroll(event: Event): void {
     const target = event.target as HTMLElement | null;
     const nextTop = Math.max(target?.scrollTop ?? 0, 0);
+    const HIDE_TRIGGER_SCROLL_TOP = 88;
+    const SHOW_TRIGGER_SCROLL_TOP = 32;
+    const HIDE_DELTA = 10;
+    const SHOW_DELTA = 6;
 
     if (!this.shouldEnableHeaderSwapOnScroll() || !this.shouldShowGlobalHeader()) {
       this.isGlobalHeaderHiddenOnScroll.set(false);
@@ -409,16 +413,19 @@ export class App {
       return;
     }
 
-    if (nextTop <= 8) {
+    if (nextTop <= SHOW_TRIGGER_SCROLL_TOP) {
       this.isGlobalHeaderHiddenOnScroll.set(false);
       this.lastAppContentScrollTop = nextTop;
       return;
     }
 
     const delta = nextTop - this.lastAppContentScrollTop;
-    if (delta > 2) {
+    const isCurrentlyHidden = this.isGlobalHeaderHiddenOnScroll();
+
+    // Use hysteresis so tiny scroll jitter around header boundary does not toggle visibility.
+    if (!isCurrentlyHidden && nextTop >= HIDE_TRIGGER_SCROLL_TOP && delta >= HIDE_DELTA) {
       this.isGlobalHeaderHiddenOnScroll.set(true);
-    } else if (delta < -2) {
+    } else if (isCurrentlyHidden && (nextTop <= SHOW_TRIGGER_SCROLL_TOP || delta <= -SHOW_DELTA)) {
       this.isGlobalHeaderHiddenOnScroll.set(false);
     }
 
@@ -644,7 +651,10 @@ export class App {
         if (error.status === 401) {
           this.userDataError.set('Session expired. Please login again.');
           this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
+          const currentPath = this.normalizeRoutePath(this.router.url);
+          if (!this.isPublicEntryRoute(currentPath)) {
+            this.router.navigateByUrl('/users/login');
+          }
           this.isLoadingUserData.set(false);
           return;
         }

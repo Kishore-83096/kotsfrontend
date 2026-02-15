@@ -91,6 +91,7 @@
               <span class="admin-chip">Available: {{ flat.is_available ? 'Yes' : 'No' }}</span>
             </div>
             <div class="flat-actions">
+              <button type="button" class="action-btn ghost" (click)="openFlatPicturesModal(flat.id)">Manage Pictures</button>
               <button type="button" class="action-btn ghost" (click)="openLinkAmenitiesModal(flat.id)">Link Amenities</button>
               <button type="button" class="action-btn primary" (click)="openUpdateFlatModal(flat.id)">Update Flat</button>
               <button
@@ -182,6 +183,143 @@
       <button type="button" class="action-btn primary" (click)="updateTower()" [disabled]="isUpdatingTower()">
         {{ isUpdatingTower() ? 'Updating...' : 'Update Tower' }}
       </button>
+      </div>
+    </article>
+  </section>
+}
+
+@if (isFlatPicturesModalOpen()) {
+  <section class="modal-backdrop" (click)="closeFlatPicturesModal()">
+    <article class="action-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Manage Flat Pictures (Max 6)</h3>
+        <button type="button" class="action-btn ghost" (click)="closeFlatPicturesModal()">Close</button>
+      </header>
+      <div class="modal-content">
+        @if (flatPicturesModalError()) {
+          <p class="error-text">{{ flatPicturesModalError() }}</p>
+        }
+        @if (flatPicturesModalMessage()) {
+          <p class="success-text">{{ flatPicturesModalMessage() }}</p>
+        }
+
+        <section class="form-grid">
+          <label>
+            <span>Room Name</span>
+            <input
+              type="text"
+              maxlength="80"
+              [value]="addFlatPictureRoomName()"
+              (input)="setAddFlatPictureRoomName($any($event.target).value)"
+              [disabled]="isAddingFlatPicture()"
+              placeholder="Master Bedroom"
+            />
+          </label>
+          <label class="file-field">
+            <span>Room Picture</span>
+            <div class="upload-field">
+              <label class="upload-trigger" for="admin-add-flat-room-picture">Choose Picture</label>
+              <input
+                id="admin-add-flat-room-picture"
+                class="upload-input-hidden"
+                type="file"
+                accept="image/*"
+                (change)="onAddFlatPictureFileSelected($event)"
+                [disabled]="isAddingFlatPicture()"
+              />
+            </div>
+            @if (addFlatRoomPictureFile(); as file) {
+              <small class="upload-file-name">Selected: {{ file.name }}</small>
+            }
+            @if (addFlatRoomPictureFilePreviewUrl(); as previewUrl) {
+              <div class="upload-preview-box">
+                <img class="upload-preview-image" [src]="previewUrl" alt="Selected room preview" />
+              </div>
+            }
+          </label>
+        </section>
+
+        <button type="button" class="action-btn primary" (click)="addFlatPicture()" [disabled]="isAddingFlatPicture()">
+          {{ isAddingFlatPicture() ? 'Adding...' : 'Add Picture' }}
+        </button>
+
+        @if (isLoadingFlatPictures()) {
+          <div>
+            <div class="skeleton-block skeleton-line lg"></div>
+            <div class="skeleton-block skeleton-line"></div>
+            <div class="skeleton-block skeleton-line"></div>
+          </div>
+        }
+
+        @if (!isLoadingFlatPictures() && flatPictures().length === 0) {
+          <p class="empty-text">No flat pictures added yet.</p>
+        }
+
+        <div class="flats-list">
+          @for (picture of flatPictures(); track picture.id) {
+            <article class="flat-card">
+              <img class="flat-image clickable-image" [src]="picture.picture_url" [alt]="picture.room_name + ' picture'" (click)="openImagePreview(picture.picture_url)" />
+              <div class="flat-content">
+                <h4>{{ picture.room_name }}</h4>
+                <div class="flat-meta-row">
+                  <span class="admin-chip">Picture ID: {{ picture.id }}</span>
+                  <span class="admin-chip">Created: {{ picture.created_at }}</span>
+                </div>
+
+                @if (editingPictureId() === picture.id) {
+                  <div class="form-grid">
+                    <label>
+                      <span>Room Name</span>
+                      <input
+                        type="text"
+                        maxlength="80"
+                        [value]="editFlatPictureRoomName()"
+                        (input)="setEditFlatPictureRoomName($any($event.target).value)"
+                        [disabled]="isUpdatingPictureId() === picture.id"
+                      />
+                    </label>
+                    <label class="file-field">
+                      <span>Replace Picture (optional)</span>
+                      <div class="upload-field">
+                        <label class="upload-trigger" [for]="'admin-edit-flat-room-picture-' + picture.id">Choose Picture</label>
+                        <input
+                          [id]="'admin-edit-flat-room-picture-' + picture.id"
+                          class="upload-input-hidden"
+                          type="file"
+                          accept="image/*"
+                          (change)="onEditFlatPictureFileSelected($event)"
+                          [disabled]="isUpdatingPictureId() === picture.id"
+                        />
+                      </div>
+                      @if (editFlatPictureFile(); as editFile) {
+                        <small class="upload-file-name">Selected: {{ editFile.name }}</small>
+                      }
+                      @if (editFlatPictureFilePreviewUrl(); as editPreviewUrl) {
+                        <div class="upload-preview-box">
+                          <img class="upload-preview-image" [src]="editPreviewUrl" alt="Selected update preview" />
+                        </div>
+                      }
+                    </label>
+                  </div>
+                }
+
+                <div class="flat-actions">
+                  @if (editingPictureId() !== picture.id) {
+                    <button type="button" class="action-btn ghost" (click)="startEditFlatPicture(picture)">Edit</button>
+                  } @else {
+                    <button type="button" class="action-btn primary" (click)="updateFlatPicture(picture.id)" [disabled]="isUpdatingPictureId() === picture.id">
+                      {{ isUpdatingPictureId() === picture.id ? 'Updating...' : 'Save' }}
+                    </button>
+                    <button type="button" class="action-btn ghost" (click)="cancelEditFlatPicture()" [disabled]="isUpdatingPictureId() === picture.id">Cancel</button>
+                  }
+                  <button type="button" class="action-btn danger" (click)="deleteFlatPicture(picture.id)" [disabled]="deletingPictureId() === picture.id">
+                    {{ deletingPictureId() === picture.id ? 'Deleting...' : 'Delete' }}
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
       </div>
     </article>
   </section>

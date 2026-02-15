@@ -9,6 +9,9 @@ import {
   AdminBookingDetailResponseEnvelopeAdmins,
   AdminUpdateBookingStatusResponseEnvelopeAdmins,
   AdminDeleteFlatResponseEnvelopeAdmins,
+  AdminCreateFlatPictureResponseEnvelopeAdmins,
+  AdminDeleteFlatPictureResponseEnvelopeAdmins,
+  AdminFlatPicturesResponseEnvelopeAdmins,
   AdminBuildingTowersResponseEnvelopeAdmins,
   AdminBuildingDetailResponseEnvelopeAdmins,
   AdminFlatDetailResponseEnvelopeAdmins,
@@ -20,6 +23,7 @@ import {
   AdminTowerFlatsResponseEnvelopeAdmins,
   AdminTowerDetailResponseEnvelopeAdmins,
   AdminUpdateFlatResponseEnvelopeAdmins,
+  AdminUpdateFlatPictureResponseEnvelopeAdmins,
   AdminUpdateTowerResponseEnvelopeAdmins,
   AdminUpdateBuildingResponseEnvelopeAdmins,
   CreateAmenityRequestAdmins,
@@ -409,6 +413,88 @@ export function deleteAdminFlatApi(
   flatId: number,
 ): Observable<AdminDeleteFlatResponseEnvelopeAdmins> {
   return http.delete<AdminDeleteFlatResponseEnvelopeAdmins>(`${apiBaseUrl}/admins/flats/${flatId}`, {
+    headers: new HttpHeaders({
+      Authorization: `Bearer ${normalizeToken(token)}`,
+    }),
+  });
+}
+
+export function getAdminFlatPicturesApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string,
+  flatId: number,
+): Observable<AdminFlatPicturesResponseEnvelopeAdmins> {
+  return http.get<AdminFlatPicturesResponseEnvelopeAdmins>(`${apiBaseUrl}/admins/flats/${flatId}/pictures`, {
+    headers: new HttpHeaders({
+      Authorization: `Bearer ${normalizeToken(token)}`,
+    }),
+  });
+}
+
+export function createAdminFlatPictureApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string,
+  flatId: number,
+  roomName: string,
+  file: File,
+  folder?: string,
+): Observable<AdminCreateFlatPictureResponseEnvelopeAdmins> {
+  const formData = new FormData();
+  formData.append('room_name', roomName);
+  formData.append('file', file);
+  if (folder) {
+    formData.append('folder', folder);
+  }
+
+  return http.post<AdminCreateFlatPictureResponseEnvelopeAdmins>(`${apiBaseUrl}/admins/flats/${flatId}/pictures`, formData, {
+    headers: new HttpHeaders({
+      Authorization: `Bearer ${normalizeToken(token)}`,
+    }),
+  });
+}
+
+export function updateAdminFlatPictureApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string,
+  flatId: number,
+  pictureId: number,
+  payload: { room_name?: string },
+  file?: File | null,
+  folder?: string,
+): Observable<AdminUpdateFlatPictureResponseEnvelopeAdmins> {
+  const formData = new FormData();
+  if (payload.room_name !== undefined) {
+    formData.append('room_name', payload.room_name);
+  }
+  if (file) {
+    formData.append('file', file);
+  }
+  if (folder) {
+    formData.append('folder', folder);
+  }
+
+  return http.put<AdminUpdateFlatPictureResponseEnvelopeAdmins>(
+    `${apiBaseUrl}/admins/flats/${flatId}/pictures/${pictureId}`,
+    formData,
+    {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${normalizeToken(token)}`,
+      }),
+    },
+  );
+}
+
+export function deleteAdminFlatPictureApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string,
+  flatId: number,
+  pictureId: number,
+): Observable<AdminDeleteFlatPictureResponseEnvelopeAdmins> {
+  return http.delete<AdminDeleteFlatPictureResponseEnvelopeAdmins>(`${apiBaseUrl}/admins/flats/${flatId}/pictures/${pictureId}`, {
     headers: new HttpHeaders({
       Authorization: `Bearer ${normalizeToken(token)}`,
     }),

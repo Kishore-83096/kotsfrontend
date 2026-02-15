@@ -17,6 +17,7 @@ import {
   UsersCreateBookingResponseEnvelopeUsers,
   UsersBuildingSearchResponseEnvelopeUsers,
   UsersFlatDetailResponseEnvelopeUsers,
+  UsersFlatPicturesResponseEnvelopeUsers,
   UsersFlatSearchResponseEnvelopeUsers,
   UsersTowerFlatsResponseEnvelopeUsers,
   UsersTowerDetailResponseEnvelopeUsers,
@@ -181,6 +182,24 @@ export function getUsersFlatDetailApi(
 ): Observable<UsersFlatDetailResponseEnvelopeUsers> {
   return http.get<UsersFlatDetailResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`,
+    {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${normalizeToken(token)}`,
+      }),
+    },
+  );
+}
+
+export function getUsersFlatPicturesApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string,
+  buildingId: number,
+  towerId: number,
+  flatId: number,
+): Observable<UsersFlatPicturesResponseEnvelopeUsers> {
+  return http.get<UsersFlatPicturesResponseEnvelopeUsers>(
+    `${apiBaseUrl}/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}/pictures`,
     {
       headers: new HttpHeaders({
         Authorization: `Bearer ${normalizeToken(token)}`,

@@ -1,13 +1,16 @@
 import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersFlatDetailApi } from '../api_users_auth';
+import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersFlatDetailApi, getUsersFlatPicturesApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
+import { ImagePreviewState } from '../../shared/image_preview_state';
 import {
   BuildingAmenityUsers,
   UsersCreateBookingResponseEnvelopeUsers,
   UsersFlatDetailResponseEnvelopeUsers,
+  UserFlatPictureItemUsers,
+  UsersFlatPicturesResponseEnvelopeUsers,
   UsersBookingsResponseEnvelopeUsers,
 } from '../typescript_users/type_users';
 
@@ -23,6 +26,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
+  private readonly imagePreviewState = inject(ImagePreviewState);
 
   protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly buildingId = signal<number | null>(null);
@@ -31,6 +35,9 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected readonly isLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly detailResponse = signal<UsersFlatDetailResponseEnvelopeUsers | null>(null);
+  protected readonly flatPicturesResponse = signal<UsersFlatPicturesResponseEnvelopeUsers | null>(null);
+  protected readonly isLoadingFlatPictures = signal(false);
+  protected readonly flatPicturesError = signal<string | null>(null);
   protected readonly isBookingModalOpen = signal(false);
   protected readonly isBookingSubmitting = signal(false);
   protected readonly bookingError = signal<string | null>(null);
@@ -39,6 +46,9 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected readonly hasAlreadyBookedThisFlat = signal(false);
   protected readonly isAmenityModalOpen = signal(false);
   protected readonly selectedAmenity = signal<BuildingAmenityUsers | null>(null);
+  protected readonly galleryIndex = signal(0);
+  @ViewChild('flatCarouselList') private flatCarouselList?: ElementRef<HTMLElement>;
+  @ViewChildren('flatCarouselSlide') private flatCarouselSlides?: QueryList<ElementRef<HTMLElement>>;
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -74,7 +84,9 @@ export class PageUsersFlatDetailComponent implements OnInit {
       this.isBookingModalOpen.set(false);
       this.closeAmenityModal();
       this.error.set(null);
+      this.galleryIndex.set(0);
       this.loadFlatDetail();
+      this.loadFlatPictures();
       this.loadBookingState();
     });
   }
@@ -101,6 +113,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
     getUsersFlatDetailApi(this.http, this.apiBaseUrl(), token, buildingId, towerId, flatId).subscribe({
       next: (response) => {
         this.detailResponse.set(response);
+        this.ensureGalleryIndexInRange();
         this.isLoading.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -134,6 +147,50 @@ export class PageUsersFlatDetailComponent implements OnInit {
     return this.detailResponse()?.data?.amenities ?? [];
   }
 
+  protected flatPictures(): UserFlatPictureItemUsers[] {
+    return this.flatPicturesResponse()?.data ?? [];
+  }
+
+  protected displayFlatPictures(): UserFlatPictureItemUsers[] {
+    const byPicturesApi = this.flatPictures();
+    if (byPicturesApi.length > 0) {
+      return byPicturesApi;
+    }
+
+    const byDetailApi = this.detailResponse()?.data?.pictures ?? [];
+    return Array.isArray(byDetailApi) ? byDetailApi : [];
+  }
+
+  protected galleryPictures(): Array<{ id: string; room_name: string; picture_url: string }> {
+    const items: Array<{ id: string; room_name: string; picture_url: string }> = [];
+    const seenUrls = new Set<string>();
+
+    const mainPictureUrl = (this.flat()?.picture_url ?? '').trim();
+    if (mainPictureUrl) {
+      items.push({
+        id: 'main-flat-picture',
+        room_name: 'Main Flat Picture',
+        picture_url: mainPictureUrl,
+      });
+      seenUrls.add(mainPictureUrl);
+    }
+
+    for (const picture of this.displayFlatPictures()) {
+      const url = (picture.picture_url ?? '').trim();
+      if (!url || seenUrls.has(url)) {
+        continue;
+      }
+      items.push({
+        id: `room-${picture.id}`,
+        room_name: picture.room_name,
+        picture_url: url,
+      });
+      seenUrls.add(url);
+    }
+
+    return items;
+  }
+
   protected openAmenityModal(amenity: BuildingAmenityUsers): void {
     this.isAmenityModalOpen.set(true);
     this.selectedAmenity.set(amenity);
@@ -142,6 +199,14 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected closeAmenityModal(): void {
     this.isAmenityModalOpen.set(false);
     this.selectedAmenity.set(null);
+  }
+
+  protected openImageModal(imageUrl: string, title?: string): void {
+    const normalizedUrl = (imageUrl ?? '').trim();
+    if (!normalizedUrl) {
+      return;
+    }
+    this.imagePreviewState.open(normalizedUrl);
   }
 
   protected openBookingModal(): void {
@@ -216,6 +281,148 @@ export class PageUsersFlatDetailComponent implements OnInit {
         // Non-blocking: keep booking flow usable even if this lookup fails.
       },
     });
+  }
+
+  private loadFlatPictures(): void {
+    const token = this.authState.accessToken();
+    const buildingId = this.buildingId();
+    const towerId = this.towerId();
+    const flatId = this.flatId();
+    if (!token) {
+      return;
+    }
+    if (!buildingId || !towerId || !flatId) {
+      return;
+    }
+
+    this.isLoadingFlatPictures.set(true);
+    this.flatPicturesError.set(null);
+    this.flatPicturesResponse.set(null);
+
+    getUsersFlatPicturesApi(this.http, this.apiBaseUrl(), token, buildingId, towerId, flatId).subscribe({
+      next: (response) => {
+        this.flatPicturesResponse.set(response);
+        this.ensureGalleryIndexInRange();
+        this.isLoadingFlatPictures.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.authState.clearAuth();
+          this.router.navigateByUrl('/users/login');
+          this.isLoadingFlatPictures.set(false);
+          return;
+        }
+        this.flatPicturesError.set('Failed to fetch flat pictures.');
+        this.isLoadingFlatPictures.set(false);
+      },
+    });
+  }
+
+  protected currentGalleryPicture(): { id: string; room_name: string; picture_url: string } | null {
+    const pictures = this.galleryPictures();
+    if (!pictures.length) {
+      return null;
+    }
+    const index = this.normalizedGalleryIndex(pictures.length);
+    return pictures[index] ?? null;
+  }
+
+  protected isGalleryPictureActive(index: number): boolean {
+    const pictures = this.galleryPictures();
+    if (!pictures.length) {
+      return false;
+    }
+    return this.normalizedGalleryIndex(pictures.length) === index;
+  }
+
+  protected goToPreviousGalleryPicture(): void {
+    const length = this.galleryPictures().length;
+    if (!length) {
+      return;
+    }
+    const current = this.normalizedGalleryIndex(length);
+    const previous = (current - 1 + length) % length;
+    this.scrollToGalleryIndex(previous);
+  }
+
+  protected goToNextGalleryPicture(): void {
+    const length = this.galleryPictures().length;
+    if (!length) {
+      return;
+    }
+    const current = this.normalizedGalleryIndex(length);
+    const next = (current + 1) % length;
+    this.scrollToGalleryIndex(next);
+  }
+
+  protected goToGalleryPicture(index: number): void {
+    this.scrollToGalleryIndex(index);
+  }
+
+  protected onGalleryScroll(): void {
+    const list = this.flatCarouselList?.nativeElement;
+    const slides = this.flatCarouselSlides?.toArray() ?? [];
+    if (!list || !slides.length) {
+      this.galleryIndex.set(0);
+      return;
+    }
+
+    const listRect = list.getBoundingClientRect();
+    const listCenter = listRect.left + listRect.width / 2;
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (let i = 0; i < slides.length; i += 1) {
+      const slideRect = slides[i].nativeElement.getBoundingClientRect();
+      const slideCenter = slideRect.left + slideRect.width / 2;
+      const distance = Math.abs(slideCenter - listCenter);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = i;
+      }
+    }
+
+    this.galleryIndex.set(nearestIndex);
+  }
+
+  private scrollToGalleryIndex(index: number): void {
+    const slides = this.flatCarouselSlides?.toArray() ?? [];
+    if (!slides.length) {
+      return;
+    }
+    const length = slides.length;
+    const bounded = ((index % length) + length) % length;
+    slides[bounded].nativeElement.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+    this.galleryIndex.set(bounded);
+  }
+
+  private ensureGalleryIndexInRange(): void {
+    const pictures = this.galleryPictures();
+    if (!pictures.length) {
+      this.galleryIndex.set(0);
+      return;
+    }
+    const normalized = this.normalizedGalleryIndex(pictures.length);
+    this.galleryIndex.set(normalized);
+    setTimeout(() => this.scrollToGalleryIndex(normalized), 0);
+  }
+
+  private normalizedGalleryIndex(length: number): number {
+    if (length <= 0) {
+      return 0;
+    }
+    const current = this.galleryIndex();
+    if (!Number.isInteger(current) || current < 0) {
+      return 0;
+    }
+    if (current >= length) {
+      return 0;
+    }
+    return current;
   }
 }
 
