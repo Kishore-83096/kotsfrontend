@@ -114,7 +114,9 @@ export class PageUsersTowerDetailComponent implements OnInit {
   }
 
   protected flatsData(): UserFlatListItemUsers[] {
-    return this.flatsResponse()?.data?.items ?? [];
+    return [...(this.flatsResponse()?.data?.items ?? [])].sort((a, b) =>
+      (a.flat_number ?? '').localeCompare(b.flat_number ?? '', undefined, { sensitivity: 'base', numeric: true }),
+    );
   }
 
   protected availableFlatsCount(): number {

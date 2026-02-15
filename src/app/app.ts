@@ -84,7 +84,26 @@ export class App {
   protected readonly shouldShowGlobalHeader = computed(
     () => this.hasSession() && !this.isPublicEntryRoute(this.currentRoutePath()),
   );
+  protected readonly shouldUseCompactHeaderMenu = computed(
+    () => this.isMobileDevice() || this.isHeaderCompactMode(),
+  );
+  protected readonly shouldEnableHeaderSwapOnScroll = computed(() => {
+    const path = this.currentRoutePath();
+    return (
+      path === '/home' ||
+      path === '/users/bookings' ||
+      path === '/users/flats/search' ||
+      /^\/users\/buildings\/[^/]+\/towers$/.test(path) ||
+      /^\/users\/buildings\/[^/]+\/towers\/[^/]+$/.test(path) ||
+      /^\/users\/buildings\/[^/]+\/towers\/[^/]+\/flats\/[^/]+$/.test(path)
+    );
+  });
+  protected readonly isGlobalHeaderHiddenOnScroll = signal(false);
+  protected readonly shouldReserveHeaderSpace = computed(
+    () => this.shouldShowGlobalHeader() && !this.isGlobalHeaderHiddenOnScroll(),
+  );
   protected readonly deviceMode = signal<'mobile' | 'desktop'>(this.detectDeviceMode());
+  protected readonly isHeaderCompactMode = signal(this.detectHeaderCompactMode());
   protected readonly isMobileDevice = computed(() => this.deviceMode() === 'mobile');
   protected readonly isDesktopDevice = computed(() => this.deviceMode() === 'desktop');
   protected readonly isGlobalLoading = computed(() => this.httpLoadingState.isLoading() || this.isRouteTransitioning());
@@ -125,6 +144,7 @@ export class App {
   protected readonly hasMasterAccess = computed(() => this.roleBadges().includes('MASTER'));
   private imageMutationObserver: MutationObserver | null = null;
   private readonly onWindowResize = () => this.refreshDeviceMode();
+  private lastAppContentScrollTop = 0;
 
   protected readonly profileRows = computed(() => {
     const profile = this.profileData();
@@ -185,6 +205,8 @@ export class App {
           const fromPath = this.normalizeRoutePath(this.router.url);
           const toPath = this.normalizeRoutePath(event.url);
           this.currentRoutePath.set(toPath);
+          this.isGlobalHeaderHiddenOnScroll.set(false);
+          this.lastAppContentScrollTop = 0;
           this.isLoginHomeTransition.set(this.shouldShowLoginHomeTransition(fromPath, toPath));
           this.isRouteTransitioning.set(true);
           return;
@@ -196,6 +218,8 @@ export class App {
           event instanceof NavigationError
         ) {
           this.currentRoutePath.set(this.normalizeRoutePath(this.router.url));
+          this.isGlobalHeaderHiddenOnScroll.set(false);
+          this.lastAppContentScrollTop = 0;
           this.isRouteTransitioning.set(false);
           this.isLoginHomeTransition.set(false);
         }
@@ -373,6 +397,32 @@ export class App {
 
     this.isSearchModalOpen.set(false);
     this.router.navigate(['/users/flats/search'], { queryParams });
+  }
+
+  protected onAppContentScroll(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    const nextTop = Math.max(target?.scrollTop ?? 0, 0);
+
+    if (!this.shouldEnableHeaderSwapOnScroll() || !this.shouldShowGlobalHeader()) {
+      this.isGlobalHeaderHiddenOnScroll.set(false);
+      this.lastAppContentScrollTop = nextTop;
+      return;
+    }
+
+    if (nextTop <= 8) {
+      this.isGlobalHeaderHiddenOnScroll.set(false);
+      this.lastAppContentScrollTop = nextTop;
+      return;
+    }
+
+    const delta = nextTop - this.lastAppContentScrollTop;
+    if (delta > 2) {
+      this.isGlobalHeaderHiddenOnScroll.set(true);
+    } else if (delta < -2) {
+      this.isGlobalHeaderHiddenOnScroll.set(false);
+    }
+
+    this.lastAppContentScrollTop = nextTop;
   }
 
   protected updateAccountDetails(): void {
@@ -665,6 +715,7 @@ export class App {
     }
 
     const prepareImage = (image: HTMLImageElement): void => {
+      this.applyOptimizedImageSource(image);
       image.classList.add('app-img-track');
       image.classList.remove('img-loaded', 'img-error');
 
@@ -723,6 +774,69 @@ export class App {
     });
   }
 
+  private applyOptimizedImageSource(image: HTMLImageElement): void {
+    const currentSrc = image.getAttribute('src');
+    if (!currentSrc || currentSrc.startsWith('blob:') || currentSrc.startsWith('data:')) {
+      return;
+    }
+
+    const originalSrc = image.dataset['imgOriginalSrc'] || currentSrc;
+    image.dataset['imgOriginalSrc'] = originalSrc;
+
+    const optimizedSrc = this.optimizeCloudinaryImageUrl(originalSrc, this.resolveTargetImageWidth(image));
+    if (optimizedSrc !== currentSrc) {
+      image.setAttribute('src', optimizedSrc);
+    }
+  }
+
+  private optimizeCloudinaryImageUrl(url: string, targetWidth: number): string {
+    if (!/^https?:\/\/res\.cloudinary\.com\//i.test(url)) {
+      return url;
+    }
+
+    const uploadMarker = '/upload/';
+    const markerIndex = url.indexOf(uploadMarker);
+    if (markerIndex < 0) {
+      return url;
+    }
+
+    const startIndex = markerIndex + uploadMarker.length;
+    const remainder = url.slice(startIndex);
+    if (!remainder) {
+      return url;
+    }
+
+    const width = Math.max(80, Math.min(1800, Math.round(targetWidth)));
+    const transform = `f_auto,q_auto,c_limit,w_${width}`;
+    return `${url.slice(0, startIndex)}${transform}/${remainder}`;
+  }
+
+  private resolveTargetImageWidth(image: HTMLImageElement): number {
+    const displayWidth = image.getBoundingClientRect().width || image.clientWidth || 0;
+    if (displayWidth > 0) {
+      const dpr = this.viewportWindow?.devicePixelRatio ?? 1;
+      return displayWidth * Math.min(Math.max(dpr, 1), 2);
+    }
+
+    const classes = image.classList;
+    if (classes.contains('header-avatar')) return 96;
+    if (classes.contains('avatar-fallback')) return 96;
+    if (classes.contains('profile-image-large')) return 260;
+    if (classes.contains('upload-preview-image')) return 320;
+    if (classes.contains('amenity-image')) return 420;
+    if (classes.contains('global-image-preview-full')) return 1600;
+    if (classes.contains('result-image')) return 760;
+    if (classes.contains('building-image')) return 900;
+    if (classes.contains('tower-image')) return 900;
+    if (classes.contains('flat-image')) return 900;
+    if (classes.contains('booking-image')) return 760;
+    if (classes.contains('modal-flat-image')) return 980;
+    if (classes.contains('flat-gallery-image')) return 980;
+    if (classes.contains('amenity-modal-image')) return 980;
+
+    return 960;
+  }
+
   private normalizeRoutePath(url: string): string {
     const trimmed = (url || '/').trim();
     if (!trimmed) {
@@ -749,6 +863,14 @@ export class App {
 
   private refreshDeviceMode(): void {
     this.deviceMode.set(this.detectDeviceMode());
+    this.isHeaderCompactMode.set(this.detectHeaderCompactMode());
+  }
+
+  private detectHeaderCompactMode(): boolean {
+    if (!this.viewportWindow) {
+      return false;
+    }
+    return this.viewportWindow.innerWidth <= 1220;
   }
 
   private applyDeviceSelectors(mode: 'mobile' | 'desktop'): void {

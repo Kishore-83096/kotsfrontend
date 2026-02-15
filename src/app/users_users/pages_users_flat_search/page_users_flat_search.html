@@ -14,21 +14,40 @@
           </p>
         }
       </section>
+      <div class="header-actions-block">
+        <div class="header-meta-actions">
+          <button
+            type="button"
+            class="action-btn secondary header-inline-btn icon-btn"
+            (click)="toggleSearchDropdown()"
+            [attr.aria-expanded]="isSearchDropdownOpen()"
+            aria-controls="search-form-dropdown-content"
+            [attr.aria-label]="isSearchDropdownOpen() ? 'Hide search filters' : 'Show search filters'"
+            [attr.title]="isSearchDropdownOpen() ? 'Hide search filters' : 'Show search filters'"
+          >
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M3 5h18v2H3zm4 6h10v2H7zm3 6h4v2h-4z" />
+            </svg>
+            <span class="btn-label">{{ isSearchDropdownOpen() ? 'Hide Filters' : 'Show Filters' }}</span>
+          </button>
+          <button
+            type="button"
+            class="action-btn secondary header-inline-btn icon-btn"
+            (click)="goBack()"
+            aria-label="Go back"
+            title="Go back"
+          >
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M14 7l-5 5 5 5 1.4-1.4L11.8 12l3.6-3.6zM20 11H10v2h10z" />
+            </svg>
+            <span class="btn-label">Go Back</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <section class="search-form-card">
-      <button
-        type="button"
-        class="search-dropdown-toggle"
-        (click)="toggleSearchDropdown()"
-        [attr.aria-expanded]="isSearchDropdownOpen()"
-        aria-controls="search-form-dropdown-content"
-      >
-        <span>{{ isSearchDropdownOpen() ? 'Hide Search Filters' : 'Show Search Filters' }}</span>
-        <strong>{{ isSearchDropdownOpen() ? '^' : 'v' }}</strong>
-      </button>
-
-      @if (isSearchDropdownOpen()) {
+    @if (isSearchDropdownOpen()) {
+      <section class="search-form-card">
         <div id="search-form-dropdown-content" class="search-dropdown-content">
           <div class="tab-row" role="tablist" aria-label="Search Type">
             <button
@@ -109,8 +128,8 @@
             </button>
           </div>
         </div>
-      }
-    </section>
+      </section>
+    }
   </header>
 
   @if (error()) {

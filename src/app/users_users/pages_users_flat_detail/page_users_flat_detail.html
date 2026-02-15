@@ -3,42 +3,39 @@
     <div class="header-layout">
       <section class="header-info">
         <h2>{{ flat()?.flat_number ?? 'Flat' }}</h2>
-        <p>
-          Tower:
-          <a class="entity-link" [routerLink]="['/users/buildings', buildingId(), 'towers', towerId()]">
-            {{ tower()?.name ?? 'Tower' }}
-          </a>
-        </p>
-        <p>
-          Building:
-          <a class="entity-link" [routerLink]="['/users/buildings', buildingId(), 'towers']">
-            {{ building()?.name ?? 'Building' }}
-          </a>
-        </p>
-        @if (building()) {
-          <p class="flat-address">{{ building()!.full_address ?? (building()!.address + ', ' + building()!.city + ', ' + building()!.state + ', ' + building()!.pincode) }}</p>
-        }
+        <p>Flat details and booking</p>
       </section>
       <div class="header-actions-block">
         <div class="header-meta-actions">
           <a
-            class="action-btn ghost header-inline-btn"
+            class="action-btn ghost header-inline-btn icon-btn"
             [routerLink]="['/users/buildings', buildingId(), 'towers', towerId()]"
             [attr.title]="'Back to ' + (tower()?.name ?? 'Tower')"
+            aria-label="Back to tower"
           >
-            Back to <span class="back-label">{{ tower()?.name ?? 'Tower' }}</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M14 7l-5 5 5 5 1.4-1.4L11.8 12l3.6-3.6zM20 11H10v2h10z" />
+            </svg>
+            <span class="btn-label">Back to <span class="back-label">{{ tower()?.name ?? 'Tower' }}</span></span>
           </a>
           <button
             type="button"
-            class="action-btn primary header-inline-btn"
+            class="action-btn primary header-inline-btn icon-btn"
             (click)="openBookingModal()"
             [disabled]="flat()?.is_available === false || hasAlreadyBookedThisFlat()"
+            aria-label="Book flat"
+            title="Book flat"
           >
-            {{
-              hasAlreadyBookedThisFlat()
-                ? 'User Already Booked The Flat'
-                : (flat()?.is_available === false ? 'Flat Not Available' : 'Book Flat')
-            }}
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M7 2h2v2h6V2h2v2h3v18H4V4h3zm11 6H6v12h12V8zm-8 2h4v2h-4v-2z" />
+            </svg>
+            <span class="btn-label">
+              {{
+                hasAlreadyBookedThisFlat()
+                  ? 'User Already Booked The Flat'
+                  : (flat()?.is_available === false ? 'Flat Not Available' : 'Book Flat')
+              }}
+            </span>
           </button>
         </div>
       </div>
@@ -58,6 +55,31 @@
       <div class="skeleton-block skeleton-image"></div>
     </section>
   }
+
+  <section class="flat-location-section">
+    <div class="flat-location-table">
+      <p>
+        <span>Tower</span>
+        <strong>
+          <a class="entity-link" [routerLink]="['/users/buildings', buildingId(), 'towers', towerId()]">
+            {{ tower()?.name ?? 'Tower' }}
+          </a>
+        </strong>
+      </p>
+      <p>
+        <span>Building</span>
+        <strong>
+          <a class="entity-link" [routerLink]="['/users/buildings', buildingId(), 'towers']">
+            {{ building()?.name ?? 'Building' }}
+          </a>
+        </strong>
+      </p>
+      <p>
+        <span>Address</span>
+        <strong>{{ building()?.full_address ?? ((building()?.address ?? '') + ', ' + (building()?.city ?? '') + ', ' + (building()?.state ?? '') + ', ' + (building()?.pincode ?? '')) }}</strong>
+      </p>
+    </div>
+  </section>
 
   <section class="flat-images-section">
     <header class="section-header flat-images-section-header">

@@ -6,23 +6,34 @@
         <p>Browse flat inventory and availability.</p>
       </section>
       <div class="header-actions-block">
-        @if (!isLoading() && !error()) {
-          <p class="header-totals-right">
-            Total Flats: {{ flatsData().length }} | Available Flats: {{ availableFlatsCount() }}
-          </p>
-        }
         <div class="header-meta-actions">
           @if (building()) {
-            <button type="button" class="view-btn header-inline-btn" (click)="openAmenitiesModal()">
-              View Amenities
+            <button
+              type="button"
+              class="view-btn header-inline-btn icon-btn"
+              (click)="openAmenitiesModal()"
+              aria-label="View amenities"
+              title="View amenities"
+            >
+              <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  fill="currentColor"
+                  d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"
+                />
+              </svg>
+              <span class="btn-label">View Amenities</span>
             </button>
           }
           <a
-            class="action-btn ghost header-inline-btn"
+            class="action-btn ghost header-inline-btn icon-btn"
             [routerLink]="['/users/buildings', buildingId(), 'towers']"
-            [attr.title]="'Go back to ' + (building()?.name ?? 'Building')"
+            [attr.title]="'Go back to ' + (building()?.name ?? 'Building') + ' towers'"
+            aria-label="Go back to towers"
           >
-            Go Back to {{ building()?.name ?? 'Building' }}
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M14 7l-5 5 5 5 1.4-1.4L11.8 12l3.6-3.6zM20 11H10v2h10z" />
+            </svg>
+            <span class="btn-label">Go Back to Towers</span>
           </a>
         </div>
       </div>

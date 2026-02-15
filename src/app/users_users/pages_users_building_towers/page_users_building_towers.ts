@@ -98,7 +98,9 @@ export class PageUsersBuildingTowersComponent implements OnInit {
   }
 
   protected towersData(): UserTowerListItemUsers[] {
-    return this.towersResponse()?.data ?? [];
+    return [...(this.towersResponse()?.data ?? [])].sort((a, b) =>
+      (a.name ?? '').localeCompare(b.name ?? '', undefined, { sensitivity: 'base', numeric: true }),
+    );
   }
 
   protected openTowerDetail(towerId: number): void {

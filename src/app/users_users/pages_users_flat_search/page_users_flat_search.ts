@@ -34,7 +34,7 @@ export class PageUsersFlatSearchComponent implements OnInit {
   protected readonly isLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly tab = signal<'flat' | 'building'>('flat');
-  protected readonly isSearchDropdownOpen = signal(true);
+  protected readonly isSearchDropdownOpen = signal(false);
 
   protected readonly buildingName = signal('');
   protected readonly address = signal('');
@@ -138,6 +138,14 @@ export class PageUsersFlatSearchComponent implements OnInit {
 
   protected openBuildingTowers(building: UserBuildingListItemUsers): void {
     this.router.navigateByUrl(`/users/buildings/${building.id}/towers`);
+  }
+
+  protected goBack(): void {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    this.router.navigateByUrl('/home');
   }
 
   private loadResults(): void {

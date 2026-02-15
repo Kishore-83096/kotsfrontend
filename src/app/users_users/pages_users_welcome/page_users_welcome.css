@@ -398,15 +398,11 @@
 
 @media (max-width: 1180px) {
   .buildings-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 860px) {
-  .buildings-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .building-card {
     padding: 0.5rem;
     grid-template-rows: 2.6rem 180px minmax(0, 1fr) 2.8rem;

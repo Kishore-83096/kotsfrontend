@@ -1,12 +1,12 @@
 <main class="app-shell" [class.device-mobile]="isMobileDevice()" [class.device-desktop]="isDesktopDevice()">
   @if (shouldShowGlobalHeader()) {
-    <header class="auth-global-header">
+    <header class="auth-global-header" [class.hidden-on-scroll]="isGlobalHeaderHiddenOnScroll()">
       <div class="auth-header-inner">
         <div class="brand-block">
           <h1>KOTS Rental Application</h1>
           <p>Authenticated Workspace</p>
         </div>
-        @if (isMobileDevice()) {
+        @if (shouldUseCompactHeaderMenu()) {
           <div class="mobile-header-actions">
             <div class="mobile-menu-group">
               <button type="button" class="header-btn mobile-dropdown-btn" (click)="toggleTitleMenu()" aria-label="Open title menu">
@@ -85,7 +85,7 @@
     </header>
   }
 
-  <section class="app-content" [class.with-auth-header]="shouldShowGlobalHeader()">
+  <section class="app-content" [class.with-auth-header]="shouldReserveHeaderSpace()" (scroll)="onAppContentScroll($event)">
     @if (showRouteTransitionOverlay()) {
       <div class="route-transition-overlay" aria-hidden="true">
         <section class="route-welcome-grid">

@@ -34,9 +34,9 @@
 }
 
 .header-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
 }
 
@@ -45,6 +45,15 @@
   padding-left: 0.55rem;
   border-bottom: 0;
   padding-bottom: 0;
+  overflow: hidden;
+}
+
+.header-info h2,
+.header-info p,
+.flat-address {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-actions-block {
@@ -78,6 +87,21 @@
   white-space: nowrap;
 }
 
+.icon-btn {
+  gap: 0.42rem;
+}
+
+.btn-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  display: block;
+}
+
+.btn-label {
+  display: inline;
+}
+
 .entity-link {
   color: var(--color-primary-strong);
   font-weight: 700;
@@ -96,6 +120,43 @@
   margin: 0.2rem 0 0;
   color: var(--color-text-soft);
   font-size: 0.82rem;
+}
+
+.flat-location-section {
+  margin: 0 0 0.9rem;
+  border: 1px solid var(--color-border-soft);
+  background: linear-gradient(140deg, #fbfbf8, #efefe7);
+  padding: 0.85rem;
+}
+
+.flat-location-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.flat-location-table p {
+  margin: 0;
+  display: table-row;
+}
+
+.flat-location-table span {
+  display: table-cell;
+  width: 130px;
+  padding: 0.24rem 0.4rem 0.24rem 0;
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  vertical-align: top;
+}
+
+.flat-location-table strong {
+  display: table-cell;
+  padding: 0.24rem 0;
+  color: var(--color-text-strong);
+  font-size: 0.84rem;
+  vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .action-btn {
@@ -445,17 +506,6 @@
 }
 
 @media (max-width: 700px) {
-  .header-layout {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
-  }
-
-  .header-actions-block {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
   .header-meta-actions {
     width: auto;
   }
@@ -467,6 +517,23 @@
   .section-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .flat-location-table {
+    display: block;
+  }
+
+  .flat-location-table p {
+    display: grid;
+    grid-template-columns: minmax(0, 90px) minmax(0, 1fr);
+    gap: 0.42rem;
+  }
+
+  .flat-location-table span,
+  .flat-location-table strong {
+    display: block;
+    width: auto;
+    padding: 0.2rem 0;
   }
 
   .list-scroll-region {
@@ -481,6 +548,31 @@
     padding: 0.45rem;
     grid-template-rows: 2.1rem 135px minmax(0, 1fr);
     min-height: 275px;
+  }
+}
+
+@media (max-width: 980px) {
+  .header-inline-btn {
+    height: 30px;
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  .icon-btn {
+    gap: 0;
+    justify-content: center;
+  }
+
+  .btn-icon {
+    width: 15px;
+    height: 15px;
+    flex-basis: 15px;
+  }
+
+  .btn-label {
+    display: none;
   }
 }
 
