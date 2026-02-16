@@ -206,7 +206,26 @@ export class PageUsersFlatDetailComponent implements OnInit {
     if (!normalizedUrl) {
       return;
     }
-    this.imagePreviewState.open(normalizedUrl);
+
+    const galleryItems = this.galleryPictures()
+      .map((picture) => ({
+        url: (picture.picture_url ?? '').trim(),
+        name: picture.room_name,
+      }))
+      .filter((item) => item.url.length > 0);
+
+    if (!galleryItems.length) {
+      this.imagePreviewState.open(normalizedUrl, title);
+      return;
+    }
+
+    const galleryIndex = galleryItems.findIndex((item) => item.url === normalizedUrl);
+    if (galleryIndex >= 0) {
+      this.imagePreviewState.openGallery(galleryItems, galleryIndex);
+      return;
+    }
+
+    this.imagePreviewState.open(normalizedUrl, title);
   }
 
   protected openBookingModal(): void {

@@ -528,8 +528,28 @@
 @if (globalPreviewImageUrl(); as imageUrl) {
   <section class="global-image-preview-backdrop" (click)="closeGlobalImagePreview()">
     <article class="global-image-preview-shell" (click)="$event.stopPropagation()">
-      <button type="button" class="close-btn" (click)="closeGlobalImagePreview()">Close</button>
-      <img class="global-image-preview-full" [src]="imageUrl" alt="Full preview" />
+      <header class="global-image-preview-header">
+        <div class="global-image-preview-meta">
+          <p class="global-image-preview-title">{{ globalPreviewImageName() ?? 'Flat Image' }}</p>
+          @if (globalPreviewImageCount() > 1) {
+            <p class="global-image-preview-count">{{ globalPreviewImageIndex() + 1 }} / {{ globalPreviewImageCount() }}</p>
+          }
+        </div>
+        <button type="button" class="close-btn" (click)="closeGlobalImagePreview()">Close</button>
+      </header>
+      <div class="global-image-preview-stage">
+        @if (globalPreviewHasMultiple()) {
+          <button type="button" class="global-image-preview-nav prev" (click)="showPreviousGlobalPreviewImage()" aria-label="Previous image">
+            &#8249;
+          </button>
+        }
+        <img class="global-image-preview-full" [src]="imageUrl" [alt]="(globalPreviewImageName() ?? 'Full preview') + ' preview'" />
+        @if (globalPreviewHasMultiple()) {
+          <button type="button" class="global-image-preview-nav next" (click)="showNextGlobalPreviewImage()" aria-label="Next image">
+            &#8250;
+          </button>
+        }
+      </div>
     </article>
   </section>
 }

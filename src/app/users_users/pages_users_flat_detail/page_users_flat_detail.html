@@ -78,6 +78,14 @@
         <span>Address</span>
         <strong>{{ building()?.full_address ?? ((building()?.address ?? '') + ', ' + (building()?.city ?? '') + ', ' + (building()?.state ?? '') + ', ' + (building()?.pincode ?? '')) }}</strong>
       </p>
+      <p>
+        <span>Rent Per Month</span>
+        <strong>{{ flat()?.rent_amount ?? 'N/A' }}</strong>
+      </p>
+      <p>
+        <span>Security Deposit</span>
+        <strong>{{ flat()?.security_deposit ?? 'N/A' }}</strong>
+      </p>
     </div>
   </section>
 

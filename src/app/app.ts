@@ -109,6 +109,10 @@ export class App {
   protected readonly isGlobalLoading = computed(() => this.httpLoadingState.isLoading() || this.isRouteTransitioning());
   protected readonly showRouteTransitionOverlay = computed(() => this.hasSession() && this.isLoginHomeTransition());
   protected readonly globalPreviewImageUrl = this.imagePreviewState.imageUrl;
+  protected readonly globalPreviewImageName = this.imagePreviewState.imageName;
+  protected readonly globalPreviewImageIndex = this.imagePreviewState.currentIndex;
+  protected readonly globalPreviewImageCount = this.imagePreviewState.totalCount;
+  protected readonly globalPreviewHasMultiple = this.imagePreviewState.hasMultiple;
   protected readonly meResponse = signal<UserMeResponseEnvelopeUsers | null>(null);
   protected readonly profileResponse = signal<UserProfileResponseEnvelopeUsers | null>(null);
   protected readonly profileData = computed(() => this.profileResponse()?.data ?? null);
@@ -243,6 +247,14 @@ export class App {
 
   protected closeGlobalImagePreview(): void {
     this.imagePreviewState.close();
+  }
+
+  protected showPreviousGlobalPreviewImage(): void {
+    this.imagePreviewState.previous();
+  }
+
+  protected showNextGlobalPreviewImage(): void {
+    this.imagePreviewState.next();
   }
 
   protected openProfileModal(): void {
@@ -790,7 +802,13 @@ export class App {
       return;
     }
 
-    const originalSrc = image.dataset['imgOriginalSrc'] || currentSrc;
+    const previousOriginalSrc = image.dataset['imgOriginalSrc'];
+    const previousOptimizedSrc = previousOriginalSrc
+      ? this.optimizeCloudinaryImageUrl(previousOriginalSrc, this.resolveTargetImageWidth(image))
+      : null;
+    const originalSrc = !previousOriginalSrc || currentSrc !== previousOptimizedSrc
+      ? currentSrc
+      : previousOriginalSrc;
     image.dataset['imgOriginalSrc'] = originalSrc;
 
     const optimizedSrc = this.optimizeCloudinaryImageUrl(originalSrc, this.resolveTargetImageWidth(image));
