@@ -7,7 +7,7 @@ ARG BACKEND_BASE_URL
 ENV BACKEND_BASE_URL=${BACKEND_BASE_URL}
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 RUN npm run build -- --configuration production
@@ -20,4 +20,7 @@ COPY --from=build /app/dist/kots_frontend/browser /usr/share/nginx/html
 EXPOSE 80
 EXPOSE 10000
 
-CMD ["sh", "-c", "echo \"Frontend is running in ${APP_MODE:-development} mode. Open: http://127.0.0.1:4200 or http://127.0.0.1:10000\"; nginx -g 'daemon off;'"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
