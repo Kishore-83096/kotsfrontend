@@ -11,6 +11,8 @@ The app is built with Angular standalone components, Angular Router, reactive fo
 
 ## Project Section
 - **Live Project:** https://kotsfrontend.onrender.com/
+- **Render Note:** This project is deployed on Render (free plan). When the service is sleeping, the first request can take around 45 seconds while the servers start.
+- **Future Deployment Plan:** Planned migration to Google Cloud in a future release.
 - **Project Explanation:** KOTS is a rental management platform frontend where users can discover and book flats, admins can manage inventory and booking workflows, and master users can control admin access. The project focuses on role-based UX, reliable API integration, and production-oriented flows for property operations.
 
 ## Recent Backend-Driven Updates (Feb 2026)
@@ -219,6 +221,86 @@ Unit tests:
 ```bash
 npm test
 ```
+
+## Dockerized Run Guide
+Use Docker Compose from `KOTS/angular/kots_frontend`.
+
+### Prerequisites
+- Docker Desktop installed and running.
+- `docker-compose.yml` for containerized Nginx/production-style run.
+- `docker-compose.dev.yml` for hot-reload development run.
+- Optional `.env` with:
+  - `FRONTEND_PORT` (default `4200`)
+  - `FRONTEND_ALT_PORT` (default `10000`)
+  - `BACKEND_BASE_URL` (example: `http://127.0.0.1:5000`)
+  - `APP_MODE` (`development` or `production`)
+
+### Production-Style Container Run (`docker-compose.yml`)
+- Build and start:
+```bash
+docker compose up -d --build
+```
+- Start without rebuild:
+```bash
+docker compose up -d
+```
+- Stop:
+```bash
+docker compose stop
+```
+- Start stopped container:
+```bash
+docker compose start
+```
+- Restart:
+```bash
+docker compose restart
+```
+- Remove container + network:
+```bash
+docker compose down
+```
+
+### Development Container Run (`docker-compose.dev.yml`)
+- Start dev server in Docker (with polling + live code mount):
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+- Rebuild and start dev container:
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+```
+- Stop/remove dev container:
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+### Useful Docker Commands
+- Check status:
+```bash
+docker compose ps
+```
+- Tail frontend logs:
+```bash
+docker compose logs -f frontend
+```
+- Tail dev logs:
+```bash
+docker compose -f docker-compose.dev.yml logs -f frontend
+```
+- Open shell in frontend container:
+```bash
+docker compose exec frontend sh
+```
+- Fresh rebuild (no cache):
+```bash
+docker compose build --no-cache
+docker compose up -d
+```
+
+### Access URLs
+- Frontend: `http://127.0.0.1:4200`
+- Alternate port (if configured): `http://127.0.0.1:10000`
 
 ## Backend Dependency
 This frontend expects the Flask backend to be running at:
