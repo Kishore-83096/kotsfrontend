@@ -3,8 +3,13 @@
     <header class="auth-global-header" [class.hidden-on-scroll]="isGlobalHeaderHiddenOnScroll()">
       <div class="auth-header-inner">
         <div class="brand-block">
-          <h1>KOTS Rental Application</h1>
-          <p>Authenticated Workspace</p>
+          <div class="brand-identity">
+            <img class="brand-logo" src="/kots_icon.png" alt="KOTS logo" />
+            <div class="brand-copy">
+              <h1>KOTS</h1>
+              <p>Rental and Property Management</p>
+            </div>
+          </div>
         </div>
         @if (shouldUseCompactHeaderMenu()) {
           <div class="mobile-header-actions">

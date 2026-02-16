@@ -47,6 +47,24 @@
   gap: 1rem;
 }
 
+.brand-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.62rem;
+}
+
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 10px;
+  flex: 0 0 52px;
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
 .brand-block h1 {
   margin: 0;
   font-family: var(--font-display);
@@ -526,6 +544,12 @@
   .brand-block p {
     font-size: 0.64rem;
     margin-top: 0.12rem;
+  }
+
+  .brand-logo {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
   }
 }
 
