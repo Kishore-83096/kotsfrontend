@@ -10,17 +10,38 @@ It provides a role-aware UI for:
 The app is built with Angular standalone components, Angular Router, reactive forms, and typed API envelopes aligned with the Flask backend.
 
 ## Project Section
-- **Main Live App (Frontend):** https://kots-frontend-445482244619.us-central1.run.app
-- **Live API (Backend):** https://kots-flask-445482244619.us-central1.run.app
+- **Main Live App (Frontend):** https://kots-frontend-445482244619.asia-south1.run.app
+- **Live API (Backend):** https://kots-flask-445482244619.asia-south1.run.app
 - **Deployment Platform:** Google Cloud Run (Docker)
 - **Project Explanation:** KOTS is a rental management platform frontend where users can discover and book flats, admins can manage inventory and booking workflows, and master users can control admin access. The project focuses on role-based UX, reliable API integration, and production-oriented flows for property operations.
 
-## Google Cloud Deployment
-### Deploy Frontend (Docker -> Cloud Run)
+## Quick Run Modes
+### 1) Normal Local Run (Frontend)
 ```bash
-docker build --build-arg APP_MODE=production --build-arg BACKEND_BASE_URL=https://kots-flask-445482244619.us-central1.run.app -t us-central1-docker.pkg.dev/kots-rental-platform-26685/kots-flask-repo/kots-frontend:v2 .
-docker push us-central1-docker.pkg.dev/kots-rental-platform-26685/kots-flask-repo/kots-frontend:v2
-gcloud run deploy kots-frontend --image us-central1-docker.pkg.dev/kots-rental-platform-26685/kots-flask-repo/kots-frontend:v2 --region us-central1 --platform managed --allow-unauthenticated --port 80
+cd KOTS/angular/kots_frontend
+npm install
+npm start
+```
+
+### 2) Local Backend Run Reference (`run.py`)
+```bash
+cd KOTS/flask
+python run.py
+```
+
+### 3) Dockerized Run (Local Frontend)
+```bash
+cd KOTS/angular/kots_frontend
+docker compose up -d --build
+docker compose logs -f frontend
+```
+
+### 4) Google Cloud Deployment (Mumbai)
+#### Deploy Frontend (Docker -> Cloud Run)
+```bash
+docker build --build-arg APP_MODE=production --build-arg BACKEND_BASE_URL=https://<BACKEND_SERVICE_URL> -t asia-south1-docker.pkg.dev/<PROJECT_ID>/kots-flask-repo/kots-frontend:v1-india .
+docker push asia-south1-docker.pkg.dev/<PROJECT_ID>/kots-flask-repo/kots-frontend:v1-india
+gcloud run deploy kots-frontend --image asia-south1-docker.pkg.dev/<PROJECT_ID>/kots-flask-repo/kots-frontend:v1-india --region asia-south1 --platform managed --allow-unauthenticated --port 80
 ```
 
 ## Recent Backend-Driven Updates (Feb 2026)
@@ -199,7 +220,7 @@ Defined in `src/app/app.routes.ts`.
 
 ## Configuration Notes
 - Backend base URL is generated into `src/app/shared/app_env.ts` by `scripts/generate-app-env.mjs` from `.env` or Docker build args.
-- Google Cloud backend URL: `https://kots-flask-445482244619.us-central1.run.app`
+- Google Cloud backend URL: `https://kots-flask-445482244619.asia-south1.run.app`
 - Production and component-style budgets are configured in `angular.json`:
   - initial bundle warning/error: `500kB / 1MB`
   - any component style warning/error: `4kB / 8kB`
@@ -241,7 +262,7 @@ Use Docker Compose from `KOTS/angular/kots_frontend`.
 - Optional `.env` with:
   - `FRONTEND_PORT` (default `4200`)
   - `FRONTEND_ALT_PORT` (default `10000`)
-  - `BACKEND_BASE_URL` (example: `https://kots-flask-445482244619.us-central1.run.app`)
+  - `BACKEND_BASE_URL` (example: `https://kots-flask-445482244619.asia-south1.run.app`)
   - `APP_MODE` (`development` or `production`)
 
 ### Production-Style Container Run (`docker-compose.yml`)
@@ -313,7 +334,7 @@ docker compose up -d
 
 ## Backend Dependency
 This frontend expects the Flask backend to be running at:
-- `https://kots-flask-445482244619.us-central1.run.app`
+- `https://kots-flask-445482244619.asia-south1.run.app`
 
 Recommended startup order:
 1. Start Flask backend
