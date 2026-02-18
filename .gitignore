@@ -46,3 +46,20 @@ Thumbs.db
 # Env files
 .env
 .env.*
+!.env.example
+!.env.*.example
+
+# Secrets / credentials
+cloudrun.env*.yaml
+cloudrun.env*.yml
+secrets*.yaml
+secrets*.yml
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*service-account*.json
+firebase-adminsdk*.json
+application_default_credentials.json
+credentials.json
