@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { loginUsersApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 
 @Component({
   selector: 'app-page-users-login',
@@ -51,8 +52,7 @@ export class PageUsersLoginComponent {
   }
 
   private extractErrorMessage(error: HttpErrorResponse, fallback: string): string {
-    const envelope = error.error as { message?: string; error?: { user_message?: string; detail?: string } };
-    return envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? fallback;
+    return toUserErrorMessage(error, { defaultMessage: fallback });
   }
 }
 

@@ -18,6 +18,7 @@ import {
   UsersBuildingAmenitiesDataUsers,
   UsersBuildingsResponseEnvelopeUsers,
 } from '../typescript_users/type_users';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 
 @Component({
   selector: 'app-page-users-welcome',
@@ -75,7 +76,11 @@ export class PageUsersWelcomeComponent implements OnInit {
         this.isLoadingUserData.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        this.userDataError.set('Failed to fetch /users/buildings.');
+        this.userDataError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load buildings right now.',
+          }),
+        );
         this.isLoadingUserData.set(false);
       },
     });
@@ -182,7 +187,7 @@ export class PageUsersWelcomeComponent implements OnInit {
         this.isLoadingFlats.set(false);
       },
       error: () => {
-        this.flatsError.set('Failed to fetch /users/flats/search.');
+        this.flatsError.set('Unable to load flats right now.');
         this.isLoadingFlats.set(false);
       },
     });
@@ -204,8 +209,12 @@ export class PageUsersWelcomeComponent implements OnInit {
         this.amenitiesModalData.set(amenities);
         this.isAmenitiesModalLoading.set(false);
       },
-      error: () => {
-        this.amenitiesModalError.set('Failed to fetch amenities.');
+      error: (error: HttpErrorResponse) => {
+        this.amenitiesModalError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load building amenities right now.',
+          }),
+        );
         this.isAmenitiesModalLoading.set(false);
       },
     });

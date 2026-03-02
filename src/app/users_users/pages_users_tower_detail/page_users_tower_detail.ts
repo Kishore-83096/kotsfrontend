@@ -1,9 +1,10 @@
 import { API_BASE_URL } from '../../shared/app_env';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { getUsersBuildingAmenitiesApi, getUsersTowerDetailApi, getUsersTowerFlatsApi } from '../api_users_auth';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 import {
   BuildingAmenityUsers,
   UserFlatListItemUsers,
@@ -83,8 +84,12 @@ export class PageUsersTowerDetailComponent implements OnInit {
         this.flatsResponse.set(response.flats);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.error.set('Failed to fetch tower details.');
+      error: (error: HttpErrorResponse) => {
+        this.error.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load tower details right now.',
+          }),
+        );
         this.isLoading.set(false);
       },
     });
@@ -140,8 +145,12 @@ export class PageUsersTowerDetailComponent implements OnInit {
         this.amenitiesModalData.set(amenities);
         this.isAmenitiesModalLoading.set(false);
       },
-      error: () => {
-        this.amenitiesModalError.set('Failed to fetch amenities.');
+      error: (error: HttpErrorResponse) => {
+        this.amenitiesModalError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load building amenities right now.',
+          }),
+        );
         this.isAmenitiesModalLoading.set(false);
       },
     });

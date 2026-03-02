@@ -4,6 +4,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { getUsersBookingByIdApi, getUsersBookingsApi, getUsersFlatDetailApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 import {
   UsersFlatDetailDataUsers,
   UsersBookingDetailResponseEnvelopeUsers,
@@ -65,7 +66,11 @@ export class PageUsersBookingsComponent implements OnInit {
           return;
         }
 
-        this.error.set('Failed to fetch bookings.');
+        this.error.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load your bookings right now.',
+          }),
+        );
         this.isLoading.set(false);
       },
     });
@@ -103,7 +108,11 @@ export class PageUsersBookingsComponent implements OnInit {
           return;
         }
 
-        this.bookingDetailError.set('Failed to fetch booking details.');
+        this.bookingDetailError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load booking details right now.',
+          }),
+        );
         this.isLoadingBookingDetail.set(false);
       },
     });

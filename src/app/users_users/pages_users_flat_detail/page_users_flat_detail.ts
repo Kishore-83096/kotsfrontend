@@ -4,6 +4,7 @@ import { Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, inje
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersFlatDetailApi, getUsersFlatPicturesApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 import { ImagePreviewState } from '../../shared/image_preview_state';
 import {
   BuildingAmenityUsers,
@@ -112,8 +113,12 @@ export class PageUsersFlatDetailComponent implements OnInit {
         this.ensureGalleryIndexInRange();
         this.isLoading.set(false);
       },
-      error: () => {
-        this.error.set('Failed to fetch flat details.');
+      error: (error: HttpErrorResponse) => {
+        this.error.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load flat details right now.',
+          }),
+        );
         this.isLoading.set(false);
       },
     });
@@ -274,8 +279,12 @@ export class PageUsersFlatDetailComponent implements OnInit {
           return;
         }
 
-        const envelope = error.error as { message?: string; error?: { user_message?: string; detail?: string } };
-        this.bookingError.set(envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? 'Failed to create booking.');
+        this.bookingError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to create booking right now.',
+            conflictMessage: 'This flat is already booked for your account.',
+          }),
+        );
         if (error.status === 409) {
           this.hasAlreadyBookedThisFlat.set(true);
         }
@@ -320,8 +329,12 @@ export class PageUsersFlatDetailComponent implements OnInit {
         this.ensureGalleryIndexInRange();
         this.isLoadingFlatPictures.set(false);
       },
-      error: () => {
-        this.flatPicturesError.set('Failed to fetch flat pictures.');
+      error: (error: HttpErrorResponse) => {
+        this.flatPicturesError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load flat images right now.',
+          }),
+        );
         this.isLoadingFlatPictures.set(false);
       },
     });

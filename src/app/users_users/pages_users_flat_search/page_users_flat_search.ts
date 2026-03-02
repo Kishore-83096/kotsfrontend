@@ -14,6 +14,7 @@ import {
   UsersFlatSearchItemUsers,
   UsersFlatSearchResponseEnvelopeUsers,
 } from '../typescript_users/type_users';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 
 @Component({
   selector: 'app-page-users-flat-search',
@@ -159,11 +160,11 @@ export class PageUsersFlatSearchComponent implements OnInit {
           this.isLoading.set(false);
         },
         error: (err: HttpErrorResponse) => {
-          const message =
-            (err.error as { error?: { user_message?: string }; message?: string })?.error?.user_message ||
-            (err.error as { message?: string })?.message ||
-            'Failed to search buildings.';
-          this.error.set(message);
+          this.error.set(
+            toUserErrorMessage(err, {
+              defaultMessage: 'Unable to search buildings right now.',
+            }),
+          );
           this.isLoading.set(false);
         },
       });
@@ -176,11 +177,11 @@ export class PageUsersFlatSearchComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        const message =
-          (err.error as { error?: { user_message?: string }; message?: string })?.error?.user_message ||
-          (err.error as { message?: string })?.message ||
-          'Failed to search flats.';
-        this.error.set(message);
+        this.error.set(
+          toUserErrorMessage(err, {
+            defaultMessage: 'Unable to search flats right now.',
+          }),
+        );
         this.isLoading.set(false);
       },
     });

@@ -17,6 +17,7 @@ import {
 } from './users_users/api_users_auth';
 import { HttpLoadingState } from './shared/http_loading_state';
 import { ImagePreviewState } from './shared/image_preview_state';
+import { toUserErrorMessage } from './shared/api_error_message';
 import { UsersAuthState } from './users_users/state_users_auth';
 import { UserMeResponseEnvelopeUsers, UserProfileResponseEnvelopeUsers } from './users_users/typescript_users/type_users';
 
@@ -485,7 +486,7 @@ export class App {
           return;
         }
 
-        this.accountActionError.set(this.extractErrorMessage(error, 'Failed to update account details.'));
+        this.accountActionError.set(this.extractErrorMessage(error, 'Unable to update account details right now.'));
         this.isUpdatingAccountDetails.set(false);
       },
     });
@@ -521,7 +522,7 @@ export class App {
           return;
         }
 
-        this.accountActionError.set(this.extractErrorMessage(error, 'Failed to delete account.'));
+        this.accountActionError.set(this.extractErrorMessage(error, 'Unable to delete account right now.'));
         this.isDeletingAccount.set(false);
       },
     });
@@ -563,7 +564,7 @@ export class App {
           return;
         }
 
-        this.profileDetailsActionError.set(this.extractErrorMessage(error, 'Failed to update profile details.'));
+        this.profileDetailsActionError.set(this.extractErrorMessage(error, 'Unable to update profile details right now.'));
         this.isUpdatingProfileDetails.set(false);
       },
     });
@@ -603,7 +604,7 @@ export class App {
           return;
         }
 
-        this.profilePictureActionError.set(this.extractErrorMessage(error, 'Failed to update profile picture.'));
+        this.profilePictureActionError.set(this.extractErrorMessage(error, 'Unable to upload image right now.'));
         this.isUpdatingProfilePicture.set(false);
       },
     });
@@ -635,7 +636,7 @@ export class App {
           return;
         }
 
-        this.profilePictureActionError.set(this.extractErrorMessage(error, 'Failed to remove profile picture.'));
+        this.profilePictureActionError.set(this.extractErrorMessage(error, 'Unable to remove image right now.'));
         this.isUpdatingProfilePicture.set(false);
       },
     });
@@ -675,7 +676,7 @@ export class App {
           return;
         }
 
-        this.userDataError.set('Failed to fetch account/profile details.');
+        this.userDataError.set(this.extractErrorMessage(error, 'Unable to load profile and account details right now.'));
         this.isLoadingUserData.set(false);
       },
     });
@@ -707,8 +708,7 @@ export class App {
   }
 
   private extractErrorMessage(error: HttpErrorResponse, fallback: string): string {
-    const envelope = error.error as { message?: string; error?: { user_message?: string; detail?: string } };
-    return envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? fallback;
+    return toUserErrorMessage(error, { defaultMessage: fallback });
   }
 
   private replacePreviewUrl(target: WritableSignal<string | null>, file: File | null): void {

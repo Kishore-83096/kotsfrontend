@@ -2,6 +2,7 @@ import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { toUserErrorMessage } from '../../shared/api_error_message';
 
 import {
   createAdminBuildingApi,
@@ -379,8 +380,7 @@ export class PageAdminsComponent implements OnInit {
   }
 
   private extractErrorMessage(error: HttpErrorResponse, fallback: string): string {
-    const envelope = error.error as { message?: string; error?: { user_message?: string; detail?: string } };
-    return envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? fallback;
+    return toUserErrorMessage(error, { defaultMessage: fallback });
   }
 
   private replacePreviewUrl(target: WritableSignal<string | null>, file: File | null): void {
