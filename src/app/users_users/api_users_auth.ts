@@ -31,6 +31,18 @@ function normalizeToken(token: string): string {
   return trimmed.toLowerCase().startsWith('bearer ') ? trimmed.slice(7).trim() : trimmed;
 }
 
+function authOptions(token?: string | null): { headers?: HttpHeaders } {
+  if (!token) {
+    return {};
+  }
+
+  return {
+    headers: new HttpHeaders({
+      Authorization: `Bearer ${normalizeToken(token)}`,
+    }),
+  };
+}
+
 export function registerUsersApi(
   http: HttpClient,
   apiBaseUrl: string,
@@ -86,125 +98,99 @@ export function getUsersProfileApi(
 export function getUsersBuildingsApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token?: string | null,
 ): Observable<UsersBuildingsResponseEnvelopeUsers> {
-  return http.get<UsersBuildingsResponseEnvelopeUsers>(`${apiBaseUrl}/users/buildings`, {
-    headers: new HttpHeaders({
-      Authorization: `Bearer ${normalizeToken(token)}`,
-    }),
-  });
+  return http.get<UsersBuildingsResponseEnvelopeUsers>(`${apiBaseUrl}/users/buildings`, authOptions(token));
 }
 
 export function getUsersBuildingAmenitiesApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
 ): Observable<UsersBuildingAmenitiesResponseEnvelopeUsers> {
-  return http.get<UsersBuildingAmenitiesResponseEnvelopeUsers>(`${apiBaseUrl}/users/buildings/${buildingId}/amenities`, {
-    headers: new HttpHeaders({
-      Authorization: `Bearer ${normalizeToken(token)}`,
-    }),
-  });
+  return http.get<UsersBuildingAmenitiesResponseEnvelopeUsers>(
+    `${apiBaseUrl}/users/buildings/${buildingId}/amenities`,
+    authOptions(token),
+  );
 }
 
 export function getUsersBuildingAmenityByIdApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
   amenityId: number,
 ): Observable<UsersBuildingAmenityDetailResponseEnvelopeUsers> {
   return http.get<UsersBuildingAmenityDetailResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/${buildingId}/amenities/${amenityId}`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 
 export function getUsersBuildingTowersApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
 ): Observable<UsersBuildingTowersResponseEnvelopeUsers> {
-  return http.get<UsersBuildingTowersResponseEnvelopeUsers>(`${apiBaseUrl}/users/buildings/${buildingId}/towers`, {
-    headers: new HttpHeaders({
-      Authorization: `Bearer ${normalizeToken(token)}`,
-    }),
-  });
+  return http.get<UsersBuildingTowersResponseEnvelopeUsers>(
+    `${apiBaseUrl}/users/buildings/${buildingId}/towers`,
+    authOptions(token),
+  );
 }
 
 export function getUsersTowerDetailApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
   towerId: number,
 ): Observable<UsersTowerDetailResponseEnvelopeUsers> {
   return http.get<UsersTowerDetailResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/${buildingId}/towers/${towerId}`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 
 export function getUsersTowerFlatsApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
   towerId: number,
 ): Observable<UsersTowerFlatsResponseEnvelopeUsers> {
   return http.get<UsersTowerFlatsResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/${buildingId}/towers/${towerId}/flats`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 
 export function getUsersFlatDetailApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
   towerId: number,
   flatId: number,
 ): Observable<UsersFlatDetailResponseEnvelopeUsers> {
   return http.get<UsersFlatDetailResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 
 export function getUsersFlatPicturesApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   buildingId: number,
   towerId: number,
   flatId: number,
 ): Observable<UsersFlatPicturesResponseEnvelopeUsers> {
   return http.get<UsersFlatPicturesResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}/pictures`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 
@@ -223,7 +209,7 @@ export interface SearchUsersFlatsParams {
 export function searchUsersFlatsApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   params: SearchUsersFlatsParams,
 ): Observable<UsersFlatSearchResponseEnvelopeUsers> {
   const searchParams = new URLSearchParams();
@@ -236,11 +222,7 @@ export function searchUsersFlatsApi(
 
   return http.get<UsersFlatSearchResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/flats/search?${searchParams.toString()}`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 
@@ -256,7 +238,7 @@ export interface SearchUsersBuildingsParams {
 export function searchUsersBuildingsApi(
   http: HttpClient,
   apiBaseUrl: string,
-  token: string,
+  token: string | null | undefined,
   params: SearchUsersBuildingsParams,
 ): Observable<UsersBuildingSearchResponseEnvelopeUsers> {
   const searchParams = new URLSearchParams();
@@ -269,11 +251,7 @@ export function searchUsersBuildingsApi(
 
   return http.get<UsersBuildingSearchResponseEnvelopeUsers>(
     `${apiBaseUrl}/users/buildings/search?${searchParams.toString()}`,
-    {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${normalizeToken(token)}`,
-      }),
-    },
+    authOptions(token),
   );
 }
 

@@ -1,8 +1,8 @@
 import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { loginUsersApi, registerUsersApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
 
@@ -17,6 +17,7 @@ export class PageUsersLandingComponent {
   private readonly http = inject(HttpClient);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
 
   protected readonly apiBaseUrl = signal(API_BASE_URL);
@@ -37,6 +38,17 @@ export class PageUsersLandingComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
     confirmPassword: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  ngOnInit(): void {
+    this.route.data.subscribe((data) => {
+      const routeTab = data['authTab'];
+      if (routeTab === 'register') {
+        this.setActiveTab('register');
+        return;
+      }
+      this.setActiveTab('login');
+    });
+  }
 
   protected setActiveTab(tab: 'login' | 'register'): void {
     this.activeTab.set(tab);
@@ -61,7 +73,7 @@ export class PageUsersLandingComponent {
       next: (response) => {
         this.authState.setLoginResult(response);
         this.isLoginSubmitting.set(false);
-        this.router.navigateByUrl('/home');
+        this.router.navigateByUrl(this.resolvePostAuthRedirectUrl());
       },
       error: (error: HttpErrorResponse) => {
         this.loginError.set(this.extractErrorMessage(error, 'Login failed.'));
@@ -97,7 +109,7 @@ export class PageUsersLandingComponent {
           next: (loginResponse) => {
             this.authState.setLoginResult(loginResponse);
             this.isRegisterSubmitting.set(false);
-            this.router.navigateByUrl('/home');
+            this.router.navigateByUrl(this.resolvePostAuthRedirectUrl());
           },
           error: (error: HttpErrorResponse) => {
             this.registerError.set(this.extractErrorMessage(error, 'Auto login failed after registration.'));
@@ -115,6 +127,14 @@ export class PageUsersLandingComponent {
   private extractErrorMessage(error: HttpErrorResponse, fallback: string): string {
     const envelope = error.error as { message?: string; error?: { user_message?: string; detail?: string } };
     return envelope?.error?.user_message ?? envelope?.message ?? envelope?.error?.detail ?? fallback;
+  }
+
+  private resolvePostAuthRedirectUrl(): string {
+    const returnUrl = (this.route.snapshot.queryParamMap.get('returnUrl') ?? '').trim();
+    if (!returnUrl || !returnUrl.startsWith('/')) {
+      return '/home';
+    }
+    return returnUrl;
   }
 }
 

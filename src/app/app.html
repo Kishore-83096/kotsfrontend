@@ -21,22 +21,27 @@
                 <div class="mobile-dropdown-panel">
                   <div class="user-chip">
                     <div class="user-inline-row">
-                      <span class="email">{{ displayEmail() }}</span>
+                      <span class="email">{{ hasSession() ? displayEmail() : 'Not logged in' }}</span>
                     </div>
                   </div>
                   <button type="button" class="header-btn" (click)="openSearchModal()">Search</button>
                   <a class="header-btn" routerLink="/home" (click)="closeMobileHeaderMenus()">Home</a>
-                  <a class="header-btn" routerLink="/users/bookings" (click)="closeMobileHeaderMenus()">Bookings</a>
-                  <button type="button" class="header-btn" (click)="openProfileModal()">Profile</button>
-                  @if (hasMasterAccess()) {
-                    <a class="header-btn" routerLink="/master" (click)="closeMobileHeaderMenus()">MASTER</a>
+                  @if (hasSession()) {
+                    <a class="header-btn" routerLink="/users/bookings" (click)="closeMobileHeaderMenus()">Bookings</a>
+                    <button type="button" class="header-btn" (click)="openProfileModal()">Profile</button>
+                    @if (hasMasterAccess()) {
+                      <a class="header-btn" routerLink="/master" (click)="closeMobileHeaderMenus()">MASTER</a>
+                    }
+                    @if (hasAdminAccess()) {
+                      <a class="header-btn" routerLink="/admins" (click)="closeMobileHeaderMenus()">ADMIN</a>
+                    }
+                    <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
+                      {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
+                    </button>
+                  } @else {
+                    <a class="header-btn" routerLink="/users/login" (click)="closeMobileHeaderMenus()">Login</a>
+                    <a class="header-btn" routerLink="/users/register" (click)="closeMobileHeaderMenus()">Register</a>
                   }
-                  @if (hasAdminAccess()) {
-                    <a class="header-btn" routerLink="/admins" (click)="closeMobileHeaderMenus()">ADMIN</a>
-                  }
-                  <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
-                    {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
-                  </button>
                 </div>
               }
             </div>
@@ -54,33 +59,40 @@
               </svg>
               Home
             </a>
-            <a class="header-btn" routerLink="/users/bookings" routerLinkActive="active-nav-btn" style="display:inline-flex;align-items:center;">
-              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false" style="margin-right:0.32rem;display:block;">
-                <path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm12 7H5v10h14z" />
-              </svg>
-              Bookings
-            </a>
+            @if (hasSession()) {
+              <a class="header-btn" routerLink="/users/bookings" routerLinkActive="active-nav-btn" style="display:inline-flex;align-items:center;">
+                <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false" style="margin-right:0.32rem;display:block;">
+                  <path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm12 7H5v10h14z" />
+                </svg>
+                Bookings
+              </a>
+            }
             <div class="user-chip">
               <div class="user-inline-row">
-                <span class="email">{{ displayEmail() }}</span>
-                @if (hasMasterAccess()) {
+                <span class="email">{{ hasSession() ? displayEmail() : 'Not logged in' }}</span>
+                @if (hasSession() && hasMasterAccess()) {
                   <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/master" routerLinkActive="active-role-nav-badge">MASTER</a>
                 }
-                @if (hasAdminAccess()) {
+                @if (hasSession() && hasAdminAccess()) {
                   <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/admins" routerLinkActive="active-role-nav-badge">ADMIN</a>
                 }
               </div>
             </div>
-            <button type="button" class="avatar-btn" (click)="openProfileModal()" aria-label="Open profile details">
-              @if (profileImageUrl(); as imageUrl) {
-                <img class="header-avatar" [src]="imageUrl" alt="User profile picture" />
-              } @else {
-                <span class="avatar-fallback">{{ profileInitials() }}</span>
-              }
-            </button>
-            <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
-              {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
-            </button>
+            @if (hasSession()) {
+              <button type="button" class="avatar-btn" (click)="openProfileModal()" aria-label="Open profile details">
+                @if (profileImageUrl(); as imageUrl) {
+                  <img class="header-avatar" [src]="imageUrl" alt="User profile picture" />
+                } @else {
+                  <span class="avatar-fallback">{{ profileInitials() }}</span>
+                }
+              </button>
+              <button type="button" class="header-btn logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
+                {{ isLoggingOut() ? 'Logging out...' : 'Logout' }}
+              </button>
+            } @else {
+              <a class="header-btn" routerLink="/users/login">Login</a>
+              <a class="header-btn" routerLink="/users/register">Register</a>
+            }
           </div>
         }
       </div>

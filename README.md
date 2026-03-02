@@ -55,6 +55,21 @@ gcloud run deploy kots-frontend --image asia-south1-docker.pkg.dev/<PROJECT_ID>/
 - Backend upload pipeline now compresses images to roughly `100KB` before Cloudinary upload.
 - Search endpoints now use word-based address matching and ranking for better address discovery.
 
+## Recent Frontend Updates (Mar 2026)
+- Base URL `/` now redirects to `/home` (buildings-first entry).
+- User browse flows are guest-accessible (no forced login for discovery pages).
+- Global header is visible on browse pages for guests and shows `Not logged in`.
+- Header login/register actions now route to the landing auth experience.
+- Auth routes are unified on landing:
+  - `/users/auth` -> landing (login tab)
+  - `/users/login` -> landing (login tab)
+  - `/users/register` -> landing (register tab)
+- Flat detail booking flow for guests now opens a modal with login/register options.
+- Post-auth redirect is supported with `returnUrl`:
+  - users return to the same flat URL after login/register.
+- Home page now includes a dedicated flats section (separate grid from buildings):
+  - shows all flats with image, address, rent, security deposit, tower, building, and availability status.
+
 ## Why This Frontend Exists
 This frontend is used to turn the backend APIs into an end-to-end operational UI:
 - Users can discover flats/buildings visually, search by location/rent/type, and create bookings.
@@ -150,9 +165,10 @@ kots_frontend/
 Defined in `src/app/app.routes.ts`.
 
 ### Public Routes
-- `/` -> user landing page
-- `/users/login`
-- `/users/register`
+- `/` -> redirects to `/home`
+- `/users/auth` (landing auth page)
+- `/users/login` (landing auth page, login tab)
+- `/users/register` (landing auth page, register tab)
 - `/all-health-check`
 
 ### User Routes
@@ -161,7 +177,7 @@ Defined in `src/app/app.routes.ts`.
 - `/users/flats/search` (prefetch: search endpoint warmup)
 - `/users/buildings/:buildingId/towers` (prefetch: buildings + towers)
 - `/users/buildings/:buildingId/towers/:towerId` (prefetch: tower + flats)
-- `/users/buildings/:buildingId/towers/:towerId/flats/:flatId` (prefetch: flat detail + bookings)
+- `/users/buildings/:buildingId/towers/:towerId/flats/:flatId` (prefetch: flat detail)
 
 ### Admin Routes
 - `/admins` (prefetch: owned buildings)
@@ -177,22 +193,24 @@ Defined in `src/app/app.routes.ts`.
 ## Route Prefetch Strategy
 `src/app/route_prefetch_resolvers.ts` preloads critical route data before navigation completes:
 - reduces stale-screen flashes during page transitions
-- redirects to `/users/login` on backend `401`
+- redirects to `/users/login` on backend `401` for protected routes
+- public browse routes prefetch without forcing auth redirects
 - validates route params (`buildingId`, `towerId`, `flatId`) before prefetch calls
 
 ## Authentication & Session State
 - Stored in `localStorage` via `UsersAuthState`:
   - `kots_users_access_token`
   - `kots_users_last_login_result`
-- Login/registration flows set auth state and route to `/home`.
+- Login/registration flows set auth state and route to `returnUrl` when provided; fallback is `/home`.
 - Unauthorized API responses clear auth state and route user back to `/users/login`.
 
 ## Global UX Patterns
-- **Loading line**: request-level progress line in authenticated header.
+- **Loading line**: request-level progress line in global header.
 - **Login->Home transition overlay**: welcome-style skeleton shown specifically during public-entry to `/home` navigation.
 - **Skeleton loaders**: page and modal placeholders while data is in-flight.
 - **Image load tracking**: dynamic image skeleton/loading classes applied by root observer logic.
 - **Global search modal**: supports `flat` and `building` search tabs.
+- **Guest booking prompt**: flat-book action opens login/register modal for non-auth users.
 
 ## API Integration (Frontend Clients)
 

@@ -8,7 +8,6 @@ import {
   searchUsersBuildingsApi,
   searchUsersFlatsApi,
 } from '../api_users_auth';
-import { UsersAuthState } from '../state_users_auth';
 import {
   UserBuildingListItemUsers,
   UsersBuildingSearchResponseEnvelopeUsers,
@@ -26,7 +25,6 @@ export class PageUsersFlatSearchComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly authState = inject(UsersAuthState);
 
   protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly response = signal<UsersFlatSearchResponseEnvelopeUsers | null>(null);
@@ -149,31 +147,18 @@ export class PageUsersFlatSearchComponent implements OnInit {
   }
 
   private loadResults(): void {
-    const token = this.authState.accessToken();
-    if (!token) {
-      this.authState.clearAuth();
-      this.router.navigateByUrl('/users/login');
-      return;
-    }
-
     this.isLoading.set(true);
     this.error.set(null);
     this.response.set(null);
     this.buildingResponse.set(null);
 
     if (this.tab() === 'building') {
-      searchUsersBuildingsApi(this.http, this.apiBaseUrl(), token, this.buildBuildingSearchParams()).subscribe({
+      searchUsersBuildingsApi(this.http, this.apiBaseUrl(), null, this.buildBuildingSearchParams()).subscribe({
         next: (result) => {
           this.buildingResponse.set(result);
           this.isLoading.set(false);
         },
         error: (err: HttpErrorResponse) => {
-          if (err.status === 401) {
-            this.authState.clearAuth();
-            this.router.navigateByUrl('/users/login');
-            this.isLoading.set(false);
-            return;
-          }
           const message =
             (err.error as { error?: { user_message?: string }; message?: string })?.error?.user_message ||
             (err.error as { message?: string })?.message ||
@@ -185,18 +170,12 @@ export class PageUsersFlatSearchComponent implements OnInit {
       return;
     }
 
-    searchUsersFlatsApi(this.http, this.apiBaseUrl(), token, this.buildFlatSearchParams()).subscribe({
+    searchUsersFlatsApi(this.http, this.apiBaseUrl(), null, this.buildFlatSearchParams()).subscribe({
       next: (result) => {
         this.response.set(result);
         this.isLoading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status === 401) {
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isLoading.set(false);
-          return;
-        }
         const message =
           (err.error as { error?: { user_message?: string }; message?: string })?.error?.user_message ||
           (err.error as { message?: string })?.message ||

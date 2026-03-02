@@ -37,21 +37,13 @@ function parseRouteId(route: ActivatedRouteSnapshot, key: string): number | null
 
 export const usersHomePrefetchResolver: ResolveFn<true | UrlTree> = () => {
   const http = inject(HttpClient);
-  const authState = inject(UsersAuthState);
-  const router = inject(Router);
-  const token = authState.accessToken();
-  if (!token) {
-    return router.parseUrl('/users/login');
-  }
-
   return http
     .get(`${API_BASE_URL}/users/buildings`, {
-      headers: authHeaders(token),
       observe: 'response',
     })
     .pipe(
       map(() => true as const),
-      catchError((error: unknown) => of(unauthorizedToLogin(error, authState, router))),
+      catchError(() => of(true as const)),
     );
 };
 
@@ -77,56 +69,34 @@ export const usersBookingsPrefetchResolver: ResolveFn<true | UrlTree> = () => {
 
 export const usersSearchPrefetchResolver: ResolveFn<true | UrlTree> = () => {
   const http = inject(HttpClient);
-  const authState = inject(UsersAuthState);
-  const router = inject(Router);
-  const token = authState.accessToken();
-  if (!token) {
-    return router.parseUrl('/users/login');
-  }
-
   return http
     .get(`${API_BASE_URL}/users/flats/search`, {
-      headers: authHeaders(token),
       observe: 'response',
     })
     .pipe(
       map(() => true as const),
-      catchError((error: unknown) => of(unauthorizedToLogin(error, authState, router))),
+      catchError(() => of(true as const)),
     );
 };
 
 export const usersBuildingTowersPrefetchResolver: ResolveFn<true | UrlTree> = (route) => {
   const http = inject(HttpClient);
-  const authState = inject(UsersAuthState);
-  const router = inject(Router);
-  const token = authState.accessToken();
-  if (!token) {
-    return router.parseUrl('/users/login');
-  }
-
   const buildingId = parseRouteId(route, 'buildingId');
   if (!buildingId) {
     return of(true);
   }
 
   return forkJoin([
-    http.get(`${API_BASE_URL}/users/buildings`, { headers: authHeaders(token), observe: 'response' }),
-    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers`, { headers: authHeaders(token), observe: 'response' }),
+    http.get(`${API_BASE_URL}/users/buildings`, { observe: 'response' }),
+    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers`, { observe: 'response' }),
   ]).pipe(
     map(() => true as const),
-    catchError((error: unknown) => of(unauthorizedToLogin(error, authState, router))),
+    catchError(() => of(true as const)),
   );
 };
 
 export const usersTowerDetailPrefetchResolver: ResolveFn<true | UrlTree> = (route) => {
   const http = inject(HttpClient);
-  const authState = inject(UsersAuthState);
-  const router = inject(Router);
-  const token = authState.accessToken();
-  if (!token) {
-    return router.parseUrl('/users/login');
-  }
-
   const buildingId = parseRouteId(route, 'buildingId');
   const towerId = parseRouteId(route, 'towerId');
   if (!buildingId || !towerId) {
@@ -134,23 +104,16 @@ export const usersTowerDetailPrefetchResolver: ResolveFn<true | UrlTree> = (rout
   }
 
   return forkJoin([
-    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers/${towerId}`, { headers: authHeaders(token), observe: 'response' }),
-    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers/${towerId}/flats`, { headers: authHeaders(token), observe: 'response' }),
+    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers/${towerId}`, { observe: 'response' }),
+    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers/${towerId}/flats`, { observe: 'response' }),
   ]).pipe(
     map(() => true as const),
-    catchError((error: unknown) => of(unauthorizedToLogin(error, authState, router))),
+    catchError(() => of(true as const)),
   );
 };
 
 export const usersFlatDetailPrefetchResolver: ResolveFn<true | UrlTree> = (route) => {
   const http = inject(HttpClient);
-  const authState = inject(UsersAuthState);
-  const router = inject(Router);
-  const token = authState.accessToken();
-  if (!token) {
-    return router.parseUrl('/users/login');
-  }
-
   const buildingId = parseRouteId(route, 'buildingId');
   const towerId = parseRouteId(route, 'towerId');
   const flatId = parseRouteId(route, 'flatId');
@@ -158,12 +121,11 @@ export const usersFlatDetailPrefetchResolver: ResolveFn<true | UrlTree> = (route
     return of(true);
   }
 
-  return forkJoin([
-    http.get(`${API_BASE_URL}/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`, { headers: authHeaders(token), observe: 'response' }),
-    http.get(`${API_BASE_URL}/users/bookings`, { headers: authHeaders(token), observe: 'response' }),
-  ]).pipe(
+  return http
+    .get(`${API_BASE_URL}/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`, { observe: 'response' })
+    .pipe(
     map(() => true as const),
-    catchError((error: unknown) => of(unauthorizedToLogin(error, authState, router))),
+    catchError(() => of(true as const)),
   );
 };
 

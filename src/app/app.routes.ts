@@ -5,8 +5,6 @@ import { PageAdminsTowerDetailComponent } from './admins_admins/pages_admins_tow
 import { PageAllHealthCheckComponent } from './all_health_check/pages_all_health_check/page_all_health_check';
 import { PageMasterComponent } from './master_master/pages_master/page_master';
 import { PageUsersLandingComponent } from './users_users/pages_users_landing/page_users_landing';
-import { PageUsersLoginComponent } from './users_users/pages_users_login/page_users_login';
-import { PageUsersRegisterComponent } from './users_users/pages_users_register/page_users_register';
 import { PageUsersWelcomeComponent } from './users_users/pages_users_welcome/page_users_welcome';
 import { PageUsersComponent } from './users_users/pages_users/page_users';
 import { PageUsersBuildingTowersComponent } from './users_users/pages_users_building_towers/page_users_building_towers';
@@ -28,15 +26,16 @@ import {
 } from './route_prefetch_resolvers';
 
 export const routes: Routes = [
-  { path: '', component: PageUsersLandingComponent },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: PageUsersWelcomeComponent, resolve: { prefetch: usersHomePrefetchResolver } },
   { path: 'users/bookings', component: PageUsersBookingsComponent, resolve: { prefetch: usersBookingsPrefetchResolver } },
   { path: 'users/flats/search', component: PageUsersFlatSearchComponent, resolve: { prefetch: usersSearchPrefetchResolver } },
   { path: 'users/buildings/:buildingId/towers', component: PageUsersBuildingTowersComponent, resolve: { prefetch: usersBuildingTowersPrefetchResolver } },
   { path: 'users/buildings/:buildingId/towers/:towerId', component: PageUsersTowerDetailComponent, resolve: { prefetch: usersTowerDetailPrefetchResolver } },
   { path: 'users/buildings/:buildingId/towers/:towerId/flats/:flatId', component: PageUsersFlatDetailComponent, resolve: { prefetch: usersFlatDetailPrefetchResolver } },
-  { path: 'users/login', component: PageUsersLoginComponent },
-  { path: 'users/register', component: PageUsersRegisterComponent },
+  { path: 'users/auth', component: PageUsersLandingComponent, data: { authTab: 'login' } },
+  { path: 'users/login', component: PageUsersLandingComponent, data: { authTab: 'login' } },
+  { path: 'users/register', component: PageUsersLandingComponent, data: { authTab: 'register' } },
   { path: 'all-health-check', component: PageAllHealthCheckComponent },
   { path: 'users', component: PageUsersComponent },
   { path: 'admins', component: PageAdminsComponent, resolve: { prefetch: adminsHomePrefetchResolver } },

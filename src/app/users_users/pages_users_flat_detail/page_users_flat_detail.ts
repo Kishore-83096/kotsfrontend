@@ -39,6 +39,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected readonly isLoadingFlatPictures = signal(false);
   protected readonly flatPicturesError = signal<string | null>(null);
   protected readonly isBookingModalOpen = signal(false);
+  protected readonly isAuthRequiredModalOpen = signal(false);
   protected readonly isBookingSubmitting = signal(false);
   protected readonly bookingError = signal<string | null>(null);
   protected readonly bookingSuccess = signal<string | null>(null);
@@ -92,15 +93,10 @@ export class PageUsersFlatDetailComponent implements OnInit {
   }
 
   protected loadFlatDetail(): void {
-    const token = this.authState.accessToken();
     const buildingId = this.buildingId();
     const towerId = this.towerId();
     const flatId = this.flatId();
 
-    if (!token) {
-      this.error.set('No active session found. Please login again.');
-      return;
-    }
     if (!buildingId || !towerId || !flatId) {
       this.error.set('Invalid building, tower, or flat id.');
       return;
@@ -110,21 +106,13 @@ export class PageUsersFlatDetailComponent implements OnInit {
     this.error.set(null);
     this.detailResponse.set(null);
 
-    getUsersFlatDetailApi(this.http, this.apiBaseUrl(), token, buildingId, towerId, flatId).subscribe({
+    getUsersFlatDetailApi(this.http, this.apiBaseUrl(), null, buildingId, towerId, flatId).subscribe({
       next: (response) => {
         this.detailResponse.set(response);
         this.ensureGalleryIndexInRange();
         this.isLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.error.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isLoading.set(false);
-          return;
-        }
-
+      error: () => {
         this.error.set('Failed to fetch flat details.');
         this.isLoading.set(false);
       },
@@ -229,6 +217,10 @@ export class PageUsersFlatDetailComponent implements OnInit {
   }
 
   protected openBookingModal(): void {
+    if (!this.authState.accessToken()) {
+      this.isAuthRequiredModalOpen.set(true);
+      return;
+    }
     if (this.hasAlreadyBookedThisFlat()) {
       return;
     }
@@ -240,6 +232,14 @@ export class PageUsersFlatDetailComponent implements OnInit {
 
   protected closeBookingModal(): void {
     this.isBookingModalOpen.set(false);
+  }
+
+  protected closeAuthRequiredModal(): void {
+    this.isAuthRequiredModalOpen.set(false);
+  }
+
+  protected returnUrlForAuth(): string {
+    return this.router.url || '/home';
   }
 
   protected createBooking(): void {
@@ -303,13 +303,9 @@ export class PageUsersFlatDetailComponent implements OnInit {
   }
 
   private loadFlatPictures(): void {
-    const token = this.authState.accessToken();
     const buildingId = this.buildingId();
     const towerId = this.towerId();
     const flatId = this.flatId();
-    if (!token) {
-      return;
-    }
     if (!buildingId || !towerId || !flatId) {
       return;
     }
@@ -318,19 +314,13 @@ export class PageUsersFlatDetailComponent implements OnInit {
     this.flatPicturesError.set(null);
     this.flatPicturesResponse.set(null);
 
-    getUsersFlatPicturesApi(this.http, this.apiBaseUrl(), token, buildingId, towerId, flatId).subscribe({
+    getUsersFlatPicturesApi(this.http, this.apiBaseUrl(), null, buildingId, towerId, flatId).subscribe({
       next: (response) => {
         this.flatPicturesResponse.set(response);
         this.ensureGalleryIndexInRange();
         this.isLoadingFlatPictures.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isLoadingFlatPictures.set(false);
-          return;
-        }
+      error: () => {
         this.flatPicturesError.set('Failed to fetch flat pictures.');
         this.isLoadingFlatPictures.set(false);
       },

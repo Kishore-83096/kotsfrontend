@@ -1,10 +1,9 @@
 import { API_BASE_URL } from '../../shared/app_env';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { getUsersBuildingAmenitiesApi, getUsersTowerDetailApi, getUsersTowerFlatsApi } from '../api_users_auth';
-import { UsersAuthState } from '../state_users_auth';
 import {
   BuildingAmenityUsers,
   UserFlatListItemUsers,
@@ -24,7 +23,6 @@ export class PageUsersTowerDetailComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly authState = inject(UsersAuthState);
 
   protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly buildingId = signal<number | null>(null);
@@ -63,14 +61,9 @@ export class PageUsersTowerDetailComponent implements OnInit {
   }
 
   protected loadTowerDetail(): void {
-    const token = this.authState.accessToken();
     const buildingId = this.buildingId();
     const towerId = this.towerId();
 
-    if (!token) {
-      this.error.set('No active session found. Please login again.');
-      return;
-    }
     if (!buildingId || !towerId) {
       this.error.set('Invalid building or tower id.');
       return;
@@ -82,23 +75,15 @@ export class PageUsersTowerDetailComponent implements OnInit {
     this.flatsResponse.set(null);
 
     forkJoin({
-      detail: getUsersTowerDetailApi(this.http, this.apiBaseUrl(), token, buildingId, towerId),
-      flats: getUsersTowerFlatsApi(this.http, this.apiBaseUrl(), token, buildingId, towerId),
+      detail: getUsersTowerDetailApi(this.http, this.apiBaseUrl(), null, buildingId, towerId),
+      flats: getUsersTowerFlatsApi(this.http, this.apiBaseUrl(), null, buildingId, towerId),
     }).subscribe({
       next: (response) => {
         this.detailResponse.set(response.detail);
         this.flatsResponse.set(response.flats);
         this.isLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.error.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isLoading.set(false);
-          return;
-        }
-
+      error: () => {
         this.error.set('Failed to fetch tower details.');
         this.isLoading.set(false);
       },
@@ -135,8 +120,7 @@ export class PageUsersTowerDetailComponent implements OnInit {
 
   protected openAmenitiesModal(): void {
     const buildingId = this.buildingId();
-    const token = this.authState.accessToken();
-    if (!buildingId || !token) {
+    if (!buildingId) {
       return;
     }
 
@@ -145,7 +129,7 @@ export class PageUsersTowerDetailComponent implements OnInit {
     this.amenitiesModalError.set(null);
     this.amenitiesModalData.set([]);
 
-    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), token, buildingId).subscribe({
+    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), null, buildingId).subscribe({
       next: (response) => {
         const payload = (response.data ?? {}) as Partial<UsersBuildingAmenitiesDataUsers> | BuildingAmenityUsers[];
         const amenities = Array.isArray(payload)
@@ -156,14 +140,7 @@ export class PageUsersTowerDetailComponent implements OnInit {
         this.amenitiesModalData.set(amenities);
         this.isAmenitiesModalLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.error.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isAmenitiesModalLoading.set(false);
-          return;
-        }
+      error: () => {
         this.amenitiesModalError.set('Failed to fetch amenities.');
         this.isAmenitiesModalLoading.set(false);
       },

@@ -1,9 +1,8 @@
 import { API_BASE_URL } from '../../shared/app_env';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { getUsersBuildingAmenitiesApi, getUsersBuildingTowersApi, getUsersBuildingsApi } from '../api_users_auth';
-import { UsersAuthState } from '../state_users_auth';
 import {
   BuildingAmenityUsers,
   UserBuildingListItemUsers,
@@ -23,7 +22,6 @@ export class PageUsersBuildingTowersComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly authState = inject(UsersAuthState);
 
   protected readonly apiBaseUrl = signal(API_BASE_URL);
   protected readonly buildingId = signal<number | null>(null);
@@ -61,13 +59,8 @@ export class PageUsersBuildingTowersComponent implements OnInit {
   }
 
   protected loadTowers(): void {
-    const token = this.authState.accessToken();
     const id = this.buildingId();
 
-    if (!token) {
-      this.error.set('No active session found. Please login again.');
-      return;
-    }
     if (!id) {
       this.error.set('Invalid building id.');
       return;
@@ -77,20 +70,12 @@ export class PageUsersBuildingTowersComponent implements OnInit {
     this.error.set(null);
     this.towersResponse.set(null);
 
-    getUsersBuildingTowersApi(this.http, this.apiBaseUrl(), token, id).subscribe({
+    getUsersBuildingTowersApi(this.http, this.apiBaseUrl(), null, id).subscribe({
       next: (response) => {
         this.towersResponse.set(response);
         this.isLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.error.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isLoading.set(false);
-          return;
-        }
-
+      error: () => {
         this.error.set('Failed to fetch building towers.');
         this.isLoading.set(false);
       },
@@ -142,40 +127,27 @@ export class PageUsersBuildingTowersComponent implements OnInit {
   }
 
   private loadBuildingSummary(): void {
-    const token = this.authState.accessToken();
     const id = this.buildingId();
 
-    if (!token || !id) {
+    if (!id) {
       this.selectedBuilding.set(null);
       return;
     }
 
-    getUsersBuildingsApi(this.http, this.apiBaseUrl(), token).subscribe({
+    getUsersBuildingsApi(this.http, this.apiBaseUrl()).subscribe({
       next: (response) => {
         const matched = (response.data ?? []).find((building) => building.id === id) ?? null;
         this.selectedBuilding.set(matched);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.error.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-        }
-      },
+      error: () => {},
     });
   }
 
   private loadBuildingAmenities(buildingId: number): void {
-    const token = this.authState.accessToken();
-    if (!token) {
-      this.error.set('No active session found. Please login again.');
-      return;
-    }
-
     this.isAmenitiesModalLoading.set(true);
     this.amenitiesModalError.set(null);
 
-    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), token, buildingId).subscribe({
+    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), null, buildingId).subscribe({
       next: (response) => {
         const payload = (response.data ?? {}) as Partial<UsersBuildingAmenitiesDataUsers> | BuildingAmenityUsers[];
         const amenities = Array.isArray(payload)
@@ -187,14 +159,7 @@ export class PageUsersBuildingTowersComponent implements OnInit {
         this.amenitiesModalData.set(amenities);
         this.isAmenitiesModalLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isAmenitiesModalLoading.set(false);
-          return;
-        }
-
+      error: () => {
         this.amenitiesModalError.set('Failed to fetch amenities.');
         this.isAmenitiesModalLoading.set(false);
       },

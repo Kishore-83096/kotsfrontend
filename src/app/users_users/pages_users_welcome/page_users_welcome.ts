@@ -2,11 +2,18 @@ import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { getUsersBuildingAmenitiesApi, getUsersBuildingsApi, getUsersProfileApi } from '../api_users_auth';
+import {
+  getUsersBuildingAmenitiesApi,
+  getUsersBuildingsApi,
+  getUsersProfileApi,
+  searchUsersFlatsApi,
+} from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
 import {
   BuildingAmenityUsers,
   UserBuildingListItemUsers,
+  UsersFlatSearchItemUsers,
+  UsersFlatSearchResponseEnvelopeUsers,
   UserProfileResponseEnvelopeUsers,
   UsersBuildingAmenitiesDataUsers,
   UsersBuildingsResponseEnvelopeUsers,
@@ -27,6 +34,10 @@ export class PageUsersWelcomeComponent implements OnInit {
   protected readonly isLoadingUserData = signal(false);
   protected readonly userDataError = signal<string | null>(null);
   protected readonly buildingsResponse = signal<UsersBuildingsResponseEnvelopeUsers | null>(null);
+  protected readonly flatsResponse = signal<UsersFlatSearchResponseEnvelopeUsers | null>(null);
+  protected readonly isLoadingFlats = signal(false);
+  protected readonly flatsError = signal<string | null>(null);
+  protected readonly flatStatusFilter = signal<'all' | 'available' | 'unavailable'>('all');
   protected readonly profileResponse = signal<UserProfileResponseEnvelopeUsers | null>(null);
   protected readonly amenitiesByBuilding = signal<Record<number, BuildingAmenityUsers[]>>({});
   protected readonly isAmenitiesModalOpen = signal(false);
@@ -49,34 +60,21 @@ export class PageUsersWelcomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadFeaturedFlats();
     this.loadProfileIdentity();
   }
 
   protected loadUserData(): void {
-    const token = this.authState.accessToken();
-    if (!token) {
-      this.userDataError.set('No active session found. Please login again.');
-      return;
-    }
-
     this.isLoadingUserData.set(true);
     this.userDataError.set(null);
     this.buildingsResponse.set(null);
 
-    getUsersBuildingsApi(this.http, this.apiBaseUrl(), token).subscribe({
+    getUsersBuildingsApi(this.http, this.apiBaseUrl()).subscribe({
       next: (response) => {
         this.buildingsResponse.set(response);
         this.isLoadingUserData.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.userDataError.set('Session expired. Please login again.');
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isLoadingUserData.set(false);
-          return;
-        }
-
         this.userDataError.set('Failed to fetch /users/buildings.');
         this.isLoadingUserData.set(false);
       },
@@ -85,6 +83,26 @@ export class PageUsersWelcomeComponent implements OnInit {
 
   protected buildingsData(): UserBuildingListItemUsers[] {
     return this.buildingsResponse()?.data ?? [];
+  }
+
+  protected flatsData(): UsersFlatSearchItemUsers[] {
+    return this.flatsResponse()?.data?.items ?? [];
+  }
+
+  protected filteredFlatsData(): UsersFlatSearchItemUsers[] {
+    const flats = this.flatsData();
+    const filter = this.flatStatusFilter();
+    if (filter === 'available') {
+      return flats.filter((item) => item.flat.is_available);
+    }
+    if (filter === 'unavailable') {
+      return flats.filter((item) => !item.flat.is_available);
+    }
+    return flats;
+  }
+
+  protected setFlatStatusFilter(filter: 'all' | 'available' | 'unavailable'): void {
+    this.flatStatusFilter.set(filter);
   }
 
   protected amenitiesText(building: UserBuildingListItemUsers): string {
@@ -98,6 +116,13 @@ export class PageUsersWelcomeComponent implements OnInit {
 
   protected openBuildingTowers(buildingId: number): void {
     this.router.navigateByUrl(`/users/buildings/${buildingId}/towers`);
+  }
+
+  protected openFlatDetail(item: UsersFlatSearchItemUsers): void {
+    const buildingId = item.building.id;
+    const towerId = item.tower.id;
+    const flatId = item.flat.id;
+    this.router.navigateByUrl(`/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`);
   }
 
   protected openAmenitiesModal(building: UserBuildingListItemUsers): void {
@@ -137,23 +162,37 @@ export class PageUsersWelcomeComponent implements OnInit {
       error: (error: HttpErrorResponse) => {
         if (error.status === 401) {
           this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
         }
       },
     });
   }
 
-  private loadBuildingAmenities(buildingId: number): void {
-    const token = this.authState.accessToken();
-    if (!token) {
-      this.userDataError.set('No active session found. Please login again.');
-      return;
-    }
+  private loadFeaturedFlats(): void {
+    this.isLoadingFlats.set(true);
+    this.flatsError.set(null);
+    this.flatsResponse.set(null);
 
+    searchUsersFlatsApi(this.http, this.apiBaseUrl(), null, {
+      available_only: false,
+      page: 1,
+      per_page: 8,
+    }).subscribe({
+      next: (response) => {
+        this.flatsResponse.set(response);
+        this.isLoadingFlats.set(false);
+      },
+      error: () => {
+        this.flatsError.set('Failed to fetch /users/flats/search.');
+        this.isLoadingFlats.set(false);
+      },
+    });
+  }
+
+  private loadBuildingAmenities(buildingId: number): void {
     this.isAmenitiesModalLoading.set(true);
     this.amenitiesModalError.set(null);
 
-    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), token, buildingId).subscribe({
+    getUsersBuildingAmenitiesApi(this.http, this.apiBaseUrl(), null, buildingId).subscribe({
       next: (response) => {
         const payload = (response.data ?? {}) as Partial<UsersBuildingAmenitiesDataUsers> | BuildingAmenityUsers[];
         const amenities = Array.isArray(payload)
@@ -165,14 +204,7 @@ export class PageUsersWelcomeComponent implements OnInit {
         this.amenitiesModalData.set(amenities);
         this.isAmenitiesModalLoading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.authState.clearAuth();
-          this.router.navigateByUrl('/users/login');
-          this.isAmenitiesModalLoading.set(false);
-          return;
-        }
-
+      error: () => {
         this.amenitiesModalError.set('Failed to fetch amenities.');
         this.isAmenitiesModalLoading.set(false);
       },

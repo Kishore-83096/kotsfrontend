@@ -82,7 +82,7 @@ export class App {
   protected readonly hasSession = computed(() => Boolean(this.authState.accessToken()));
   protected readonly currentRoutePath = signal(this.normalizeRoutePath(this.router.url));
   protected readonly shouldShowGlobalHeader = computed(
-    () => this.hasSession() && !this.isPublicEntryRoute(this.currentRoutePath()),
+    () => !this.isAuthRoute(this.currentRoutePath()),
   );
   protected readonly shouldUseCompactHeaderMenu = computed(
     () => this.isMobileDevice() || this.isHeaderCompactMode(),
@@ -258,6 +258,10 @@ export class App {
   }
 
   protected openProfileModal(): void {
+    if (!this.hasSession()) {
+      this.router.navigateByUrl('/users/login');
+      return;
+    }
     this.closeMobileHeaderMenus();
     this.activeModalTab.set('profile');
     this.isProfileModalOpen.set(true);
@@ -879,7 +883,11 @@ export class App {
   }
 
   private isPublicEntryRoute(path: string): boolean {
-    return path === '/' || path === '/users/login' || path === '/users/register';
+    return path === '/' || path === '/users/auth' || path === '/users/login' || path === '/users/register';
+  }
+
+  private isAuthRoute(path: string): boolean {
+    return path === '/users/auth' || path === '/users/login' || path === '/users/register';
   }
 
   private detectDeviceMode(): 'mobile' | 'desktop' {

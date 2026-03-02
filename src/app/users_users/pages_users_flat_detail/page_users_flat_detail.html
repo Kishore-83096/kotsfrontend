@@ -256,6 +256,39 @@
   </section>
 }
 
+@if (isAuthRequiredModalOpen()) {
+  <section class="modal-backdrop" (click)="closeAuthRequiredModal()">
+    <article class="booking-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>Login Required</h3>
+        <button type="button" class="action-btn ghost" (click)="closeAuthRequiredModal()">Close</button>
+      </header>
+      <div class="modal-content">
+        <p class="subtitle">Please login to book this flat.</p>
+        <p class="subtitle">If you do not have an account, register first.</p>
+        <div class="modal-actions">
+          <a
+            class="action-btn primary"
+            routerLink="/users/login"
+            [queryParams]="{ returnUrl: returnUrlForAuth() }"
+            (click)="closeAuthRequiredModal()"
+          >
+            Login
+          </a>
+          <a
+            class="action-btn secondary"
+            routerLink="/users/register"
+            [queryParams]="{ returnUrl: returnUrlForAuth() }"
+            (click)="closeAuthRequiredModal()"
+          >
+            Register
+          </a>
+        </div>
+      </div>
+    </article>
+  </section>
+}
+
 @if (isAmenityModalOpen()) {
   <section class="modal-backdrop" (click)="closeAmenityModal()">
     <article class="booking-modal amenity-modal" (click)="$event.stopPropagation()">

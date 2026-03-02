@@ -2,7 +2,7 @@
   --header-control-size: 42px;
   --auth-header-vertical-pad: 0.45rem;
   --auth-header-height: calc(var(--header-control-size) + (var(--auth-header-vertical-pad) * 2));
-  --auth-header-page-gap: 4px;
+  --auth-header-page-gap: 16px;
   display: block;
   height: 100vh;
   background: transparent;
