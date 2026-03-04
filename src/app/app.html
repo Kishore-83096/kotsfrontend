@@ -19,11 +19,13 @@
               </button>
               @if (isTitleMenuOpen()) {
                 <div class="mobile-dropdown-panel">
-                  <div class="user-chip">
-                    <div class="user-inline-row">
-                      <span class="email">{{ hasSession() ? displayEmail() : 'Not logged in' }}</span>
+                  @if (hasSession()) {
+                    <div class="user-chip">
+                      <div class="user-inline-row">
+                        <span class="email">{{ displayEmail() }}</span>
+                      </div>
                     </div>
-                  </div>
+                  }
                   <button type="button" class="header-btn" (click)="openSearchModal()">Search</button>
                   <a class="header-btn" routerLink="/home" (click)="closeMobileHeaderMenus()">Home</a>
                   @if (hasSession()) {
@@ -67,17 +69,19 @@
                 Bookings
               </a>
             }
-            <div class="user-chip">
-              <div class="user-inline-row">
-                <span class="email">{{ hasSession() ? displayEmail() : 'Not logged in' }}</span>
-                @if (hasSession() && hasMasterAccess()) {
-                  <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/master" routerLinkActive="active-role-nav-badge">MASTER</a>
-                }
-                @if (hasSession() && hasAdminAccess()) {
-                  <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/admins" routerLinkActive="active-role-nav-badge">ADMIN</a>
-                }
+            @if (hasSession()) {
+              <div class="user-chip">
+                <div class="user-inline-row">
+                  <span class="email">{{ displayEmail() }}</span>
+                  @if (hasMasterAccess()) {
+                    <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/master" routerLinkActive="active-role-nav-badge">MASTER</a>
+                  }
+                  @if (hasAdminAccess()) {
+                    <a class="role-nav-badge" style="margin-left:0.3rem;" routerLink="/admins" routerLinkActive="active-role-nav-badge">ADMIN</a>
+                  }
+                </div>
               </div>
-            </div>
+            }
             @if (hasSession()) {
               <button type="button" class="avatar-btn" (click)="openProfileModal()" aria-label="Open profile details">
                 @if (profileImageUrl(); as imageUrl) {

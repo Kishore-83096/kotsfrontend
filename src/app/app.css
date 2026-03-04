@@ -1,8 +1,8 @@
 :host {
   --header-control-size: 42px;
   --auth-header-vertical-pad: 0.45rem;
-  --auth-header-height: calc(var(--header-control-size) + (var(--auth-header-vertical-pad) * 2));
-  --auth-header-page-gap: 16px;
+  --auth-header-height: calc(max(var(--header-control-size), 52px) + (var(--auth-header-vertical-pad) * 2));
+  --auth-header-page-gap: 0px;
   display: block;
   height: 100vh;
   background: transparent;

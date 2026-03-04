@@ -44,6 +44,7 @@ export class PageUsersWelcomeComponent implements OnInit {
   protected readonly flatsError = signal<string | null>(null);
   protected readonly currentFlatsPage = signal(1);
   protected readonly flatStatusFilter = signal<'all' | 'available' | 'unavailable'>('all');
+  protected readonly activeHomeTab = signal<'flats' | 'buildings'>('flats');
   protected readonly flatsPagination = computed(() => {
     const data = this.flatsResponse()?.data;
     return {
@@ -237,6 +238,18 @@ export class PageUsersWelcomeComponent implements OnInit {
     }
     this.flatStatusFilter.set(filter);
     this.loadFeaturedFlats(1);
+  }
+
+  protected onFlatFilterSelectChange(rawValue: string): void {
+    if (rawValue === 'available' || rawValue === 'unavailable') {
+      this.setFlatStatusFilter(rawValue);
+      return;
+    }
+    this.setFlatStatusFilter('all');
+  }
+
+  protected setActiveHomeTab(tab: 'flats' | 'buildings'): void {
+    this.activeHomeTab.set(tab);
   }
 
   protected goToFlatsPage(page: number): void {

@@ -128,6 +128,45 @@ export class PageUsersFlatSearchComponent implements OnInit {
     return this.response()?.data.total ?? 0;
   }
 
+  protected appliedFiltersSummary(): string {
+    const filters: string[] = [];
+    const address = this.address().trim();
+    const city = this.city().trim();
+    const state = this.state().trim();
+
+    if (this.tab() === 'building') {
+      const name = this.buildingName().trim();
+      if (name) filters.push(`Name: ${name}`);
+      if (address) filters.push(`Address: ${address}`);
+      if (city) filters.push(`City: ${city}`);
+      if (state) filters.push(`State: ${state}`);
+      return filters.length > 0 ? filters.join(' | ') : 'No filters applied';
+    }
+
+    const flatType = this.flatType().trim();
+    const minRent = this.minRent().trim();
+    const maxRent = this.maxRent().trim();
+
+    if (address) filters.push(`Address: ${address}`);
+    if (city) filters.push(`City: ${city}`);
+    if (state) filters.push(`State: ${state}`);
+    if (flatType) filters.push(`Type: ${flatType}`);
+    if (minRent) filters.push(`Min Rent: ${minRent}`);
+    if (maxRent) filters.push(`Max Rent: ${maxRent}`);
+    filters.push(this.availableOnly() ? 'Availability: Available only' : 'Availability: All');
+
+    return filters.length > 0 ? filters.join(' | ') : 'No filters applied';
+  }
+
+  protected headerContextSummary(): string {
+    const resultText = this.isLoading()
+      ? 'Loading results...'
+      : this.tab() === 'building'
+        ? `${this.total()} buildings`
+        : `${this.total()} flats`;
+    return `Filters: ${this.appliedFiltersSummary()} | Results: ${resultText}`;
+  }
+
   protected openFlatDetail(item: UsersFlatSearchItemUsers): void {
     const buildingId = item.building.id;
     const towerId = item.tower.id;

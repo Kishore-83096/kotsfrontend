@@ -3,42 +3,73 @@
     <div class="header-layout">
       <section class="header-info">
         <h2>Welcome Back {{ welcomeIdentity() }}</h2>
-        <p>Browse building inventory and availability.</p>
+        <p>Browse flats and buildings inventory.</p>
+      </section>
+      <section class="header-tabs" aria-label="Inventory tabs">
+        <button
+          type="button"
+          class="header-tab-btn"
+          aria-label="Flats tab"
+          title="Flats"
+          [class.active]="activeHomeTab() === 'flats'"
+          (click)="setActiveHomeTab('flats')"
+        >
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="tab-icon-svg" focusable="false">
+              <path d="M3 11.5L12 4l9 7.5"></path>
+              <path d="M5 10.5V20h14v-9.5"></path>
+              <path d="M9 20v-5h6v5"></path>
+            </svg>
+          </span>
+          @if (activeHomeTab() === 'flats') {
+            <span class="tab-inline-filters">
+              <select
+                class="tab-filter-select"
+                aria-label="Flat status filter"
+                [value]="flatStatusFilter()"
+                (click)="$event.stopPropagation()"
+                (change)="onFlatFilterSelectChange($any($event.target).value)"
+              >
+                <option value="all">All ({{ flatCounts().total }})</option>
+                <option value="available">Available ({{ flatCounts().available }})</option>
+                <option value="unavailable">Unavailable ({{ flatCounts().unavailable }})</option>
+              </select>
+            </span>
+          }
+        </button>
+        <button
+          type="button"
+          class="header-tab-btn"
+          aria-label="Buildings tab"
+          title="Buildings"
+          [class.active]="activeHomeTab() === 'buildings'"
+          (click)="setActiveHomeTab('buildings')"
+        >
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="tab-icon-svg" focusable="false">
+              <path d="M3.5 20h17"></path>
+              <path d="M5 20V9h5v11"></path>
+              <path d="M14 20V5h5v15"></path>
+              <path d="M7 12h1"></path>
+              <path d="M7 15h1"></path>
+              <path d="M16 8h1"></path>
+              <path d="M16 11h1"></path>
+            </svg>
+          </span>
+          @if (activeHomeTab() === 'buildings') {
+            <span class="tab-count-badge">{{ buildingCount() }}</span>
+          }
+        </button>
       </section>
     </div>
   </header>
 
+  @if (activeHomeTab() === 'flats') {
   <section class="flats-section">
     <header class="flats-section-header">
       <div class="flats-header-copy">
         <h3>Flats</h3>
         <p>Direct flat inventory with rent and deposit details.</p>
-      </div>
-      <div class="flat-filter-row">
-        <button
-          type="button"
-          class="flat-filter-btn"
-          [class.active]="flatStatusFilter() === 'all'"
-          (click)="setFlatStatusFilter('all')"
-        >
-          All ({{ flatCounts().total }})
-        </button>
-        <button
-          type="button"
-          class="flat-filter-btn"
-          [class.active]="flatStatusFilter() === 'available'"
-          (click)="setFlatStatusFilter('available')"
-        >
-          Available ({{ flatCounts().available }})
-        </button>
-        <button
-          type="button"
-          class="flat-filter-btn"
-          [class.active]="flatStatusFilter() === 'unavailable'"
-          (click)="setFlatStatusFilter('unavailable')"
-        >
-          Unavailable ({{ flatCounts().unavailable }})
-        </button>
       </div>
     </header>
 
@@ -154,17 +185,14 @@
       </section>
     }
   </section>
+  }
 
+  @if (activeHomeTab() === 'buildings') {
   <section class="buildings-section">
     <header class="buildings-section-header">
       <div class="buildings-header-copy">
         <h3>Buildings</h3>
         <p>Browse building inventory and tower availability.</p>
-      </div>
-      <div class="flat-filter-row">
-        <button type="button" class="flat-filter-btn active" disabled>
-          Buildings ({{ buildingCount() }})
-        </button>
       </div>
     </header>
 
@@ -278,6 +306,7 @@
       </section>
     }
   </section>
+  }
 </article>
 
 @if (isAmenitiesModalOpen()) {

@@ -3,16 +3,7 @@
     <div class="header-layout">
       <section class="header-info">
         <h2>Search Flats and Buildings</h2>
-        <p>Use filters to search by area details and availability.</p>
-        @if (!isLoading()) {
-          <p class="header-total-line">
-            @if (tab() === 'building') {
-              Total buildings: {{ total() }}
-            } @else {
-              Total flats: {{ total() }}
-            }
-          </p>
-        }
+        <p class="header-total-line">{{ headerContextSummary() }}</p>
       </section>
       <div class="header-actions-block">
         <div class="header-meta-actions">
