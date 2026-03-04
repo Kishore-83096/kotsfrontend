@@ -199,6 +199,7 @@ export interface SearchUsersFlatsParams {
   city?: string;
   state?: string;
   flat_type?: string;
+  status?: 'all' | 'available' | 'unavailable';
   min_rent?: string | number;
   max_rent?: string | number;
   available_only?: boolean;

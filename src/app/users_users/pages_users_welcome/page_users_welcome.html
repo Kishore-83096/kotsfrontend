@@ -21,7 +21,7 @@
           [class.active]="flatStatusFilter() === 'all'"
           (click)="setFlatStatusFilter('all')"
         >
-          All
+          All ({{ flatCounts().total }})
         </button>
         <button
           type="button"
@@ -29,7 +29,7 @@
           [class.active]="flatStatusFilter() === 'available'"
           (click)="setFlatStatusFilter('available')"
         >
-          Available
+          Available ({{ flatCounts().available }})
         </button>
         <button
           type="button"
@@ -37,7 +37,7 @@
           [class.active]="flatStatusFilter() === 'unavailable'"
           (click)="setFlatStatusFilter('unavailable')"
         >
-          Unavailable
+          Unavailable ({{ flatCounts().unavailable }})
         </button>
       </div>
     </header>
@@ -109,15 +109,63 @@
               </strong>
             </p>
           </div>
+          <div class="flat-action-section">
+            <button type="button" class="view-btn summary-amenities-action" (click)="openFlatAmenitiesModal(item); $event.stopPropagation()">
+              Flat Amenities
+            </button>
+          </div>
         </article>
       }
     </section>
+
+    @if (!isLoadingFlats() && !flatsError() && flatsPagination().totalPages > 1) {
+      <section class="flats-pagination" aria-label="Flats pagination">
+        <div class="flats-pagination-summary">
+          Page {{ flatsPagination().page }} of {{ flatsPagination().totalPages }} ({{ flatsPagination().total }} flats)
+        </div>
+        <div class="flats-pagination-actions">
+          <button
+            type="button"
+            class="flat-filter-btn"
+            [disabled]="!canGoToPreviousFlatsPage()"
+            (click)="goToPreviousFlatsPage()"
+          >
+            Previous
+          </button>
+          @for (pageNumber of flatPageNumbers(); track pageNumber) {
+            <button
+              type="button"
+              class="flat-filter-btn"
+              [class.active]="flatsPagination().page === pageNumber"
+              (click)="goToFlatsPage(pageNumber)"
+            >
+              {{ pageNumber }}
+            </button>
+          }
+          <button
+            type="button"
+            class="flat-filter-btn"
+            [disabled]="!canGoToNextFlatsPage()"
+            (click)="goToNextFlatsPage()"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    }
   </section>
 
   <section class="buildings-section">
     <header class="buildings-section-header">
-      <h3>Buildings</h3>
-      <p>Browse building inventory and tower availability.</p>
+      <div class="buildings-header-copy">
+        <h3>Buildings</h3>
+        <p>Browse building inventory and tower availability.</p>
+      </div>
+      <div class="flat-filter-row">
+        <button type="button" class="flat-filter-btn active" disabled>
+          Buildings ({{ buildingCount() }})
+        </button>
+      </div>
     </header>
 
     @if (userDataError()) {
@@ -193,6 +241,42 @@
         </article>
       }
     </section>
+
+    @if (!isLoadingUserData() && !userDataError() && buildingsPagination().totalPages > 1) {
+      <section class="buildings-pagination" aria-label="Buildings pagination">
+        <div class="buildings-pagination-summary">
+          Page {{ buildingsPagination().page }} of {{ buildingsPagination().totalPages }} ({{ buildingsPagination().total }} buildings)
+        </div>
+        <div class="buildings-pagination-actions">
+          <button
+            type="button"
+            class="flat-filter-btn"
+            [disabled]="!canGoToPreviousBuildingsPage()"
+            (click)="goToPreviousBuildingsPage()"
+          >
+            Previous
+          </button>
+          @for (pageNumber of buildingPageNumbers(); track pageNumber) {
+            <button
+              type="button"
+              class="flat-filter-btn"
+              [class.active]="buildingsPagination().page === pageNumber"
+              (click)="goToBuildingsPage(pageNumber)"
+            >
+              {{ pageNumber }}
+            </button>
+          }
+          <button
+            type="button"
+            class="flat-filter-btn"
+            [disabled]="!canGoToNextBuildingsPage()"
+            (click)="goToNextBuildingsPage()"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    }
   </section>
 </article>
 
@@ -200,7 +284,7 @@
   <section class="modal-backdrop" (click)="closeAmenitiesModal()">
     <article class="action-modal amenities-modal" (click)="$event.stopPropagation()">
       <header class="modal-header">
-        <h3>{{ selectedAmenitiesBuilding()?.name }} Amenities</h3>
+        <h3>{{ amenitiesModalTitle() }}</h3>
         <button type="button" class="view-btn ghost" (click)="closeAmenitiesModal()">Close</button>
       </header>
       <div class="modal-content">
@@ -218,11 +302,22 @@
       }
 
       @if (!isAmenitiesModalLoading() && !amenitiesModalError() && amenitiesModalData().length === 0) {
-        <p class="amenity-desc">No amenities found for this building.</p>
+        <p class="amenity-desc">{{ amenitiesModalEmptyMessage() }}</p>
       }
 
       @if (amenitiesModalData().length > 0) {
-        <p class="building-name-line"><strong>Building:</strong> {{ selectedAmenitiesBuilding()?.name ?? 'N/A' }}</p>
+        @if (amenitiesModalKind() === 'building') {
+          <p class="building-name-line"><strong>Building:</strong> {{ selectedAmenitiesBuilding()?.name ?? 'N/A' }}</p>
+        }
+        @if (amenitiesModalKind() === 'flat') {
+          <p class="building-name-line">
+            <strong>Flat:</strong> {{ selectedAmenitiesFlat()?.flat?.flat_number ?? 'N/A' }}
+            |
+            <strong>Tower:</strong> {{ selectedAmenitiesFlat()?.tower?.name ?? 'N/A' }}
+            |
+            <strong>Building:</strong> {{ selectedAmenitiesFlat()?.building?.name ?? 'N/A' }}
+          </p>
+        }
 
         <div class="amenities-list">
           @for (amenity of amenitiesModalData(); track amenity.name + '-' + $index) {

@@ -102,7 +102,7 @@
     </header>
   }
 
-  <section class="app-content" [class.with-auth-header]="shouldReserveHeaderSpace()" (scroll)="onAppContentScroll($event)">
+  <section #appContent class="app-content" [class.with-auth-header]="shouldReserveHeaderSpace()" (scroll)="onAppContentScroll($event)">
     @if (showRouteTransitionOverlay()) {
       <div class="route-transition-overlay" aria-hidden="true">
         <section class="route-welcome-grid">

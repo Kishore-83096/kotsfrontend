@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './shared/app_env';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, WritableSignal, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -148,6 +148,7 @@ export class App {
   protected readonly hasAdminAccess = computed(() => this.roleBadges().includes('ADMIN'));
   protected readonly hasMasterAccess = computed(() => this.roleBadges().includes('MASTER'));
   private imageMutationObserver: MutationObserver | null = null;
+  @ViewChild('appContent') private appContentRef?: ElementRef<HTMLElement>;
   private readonly onWindowResize = () => this.refreshDeviceMode();
   private lastAppContentScrollTop = 0;
 
@@ -225,6 +226,7 @@ export class App {
           this.currentRoutePath.set(this.normalizeRoutePath(this.router.url));
           this.isGlobalHeaderHiddenOnScroll.set(false);
           this.lastAppContentScrollTop = 0;
+          this.resetRouteScrollPosition();
           this.isRouteTransitioning.set(false);
           this.isLoginHomeTransition.set(false);
         }
@@ -915,6 +917,11 @@ export class App {
     root?.setAttribute('data-device', mode);
     body?.classList.toggle('device-mobile', mode === 'mobile');
     body?.classList.toggle('device-desktop', mode === 'desktop');
+  }
+
+  private resetRouteScrollPosition(): void {
+    this.appContentRef?.nativeElement.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    this.viewportWindow?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }
 }
 

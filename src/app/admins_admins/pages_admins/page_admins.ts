@@ -368,6 +368,50 @@ export class PageAdminsComponent implements OnInit {
     });
   }
 
+  protected formatBookingDate(value?: string | null): string {
+    const date = this.parseBookingDate(value);
+    if (!date) {
+      return 'N/A';
+    }
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      timeZone: 'Asia/Kolkata',
+    }).format(date);
+  }
+
+  protected formatBookingTime(value?: string | null): string {
+    const date = this.parseBookingDate(value);
+    if (!date) {
+      return 'N/A';
+    }
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+    })
+      .format(date)
+      .toLowerCase();
+  }
+
+  private parseBookingDate(value?: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    // Backend stores UTC timestamps; if zone is missing, treat input as UTC.
+    const hasZone = /(?:z|[+\-]\d{2}:\d{2})$/i.test(trimmed);
+    const normalized = hasZone ? trimmed : `${trimmed}Z`;
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
   private resetCreateForm(): void {
     this.createName.set('');
     this.createAddress.set('');

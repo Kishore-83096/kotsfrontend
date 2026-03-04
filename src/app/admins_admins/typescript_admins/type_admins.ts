@@ -203,7 +203,8 @@ export interface AdminBookingContextFlatAdmins {
 
 export interface AdminBookingItemAdmins {
   id: number;
-  user_id: number;
+  user_display: string;
+  user_email?: string | null;
   flat_id: number;
   tower_id: number;
   building_id: number;

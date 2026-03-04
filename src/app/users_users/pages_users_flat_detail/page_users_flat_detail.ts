@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersFlatDetailApi, getUsersFlatPicturesApi } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
@@ -49,6 +49,21 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected readonly isAmenityModalOpen = signal(false);
   protected readonly selectedAmenity = signal<BuildingAmenityUsers | null>(null);
   protected readonly galleryIndex = signal(0);
+  protected readonly loadedGalleryImageMap = signal<Record<string, true>>({});
+  protected readonly shouldShowGalleryImagePlaceholder = computed(() => {
+    if (this.isLoading() || this.isLoadingFlatPictures()) {
+      return true;
+    }
+    const current = this.currentGalleryPicture();
+    if (!current) {
+      return false;
+    }
+    const url = (current.picture_url ?? '').trim();
+    if (!url) {
+      return false;
+    }
+    return !Boolean(this.loadedGalleryImageMap()[url]);
+  });
   @ViewChild('flatCarouselList') private flatCarouselList?: ElementRef<HTMLElement>;
   @ViewChildren('flatCarouselSlide') private flatCarouselSlides?: QueryList<ElementRef<HTMLElement>>;
 
@@ -87,6 +102,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
       this.closeAmenityModal();
       this.error.set(null);
       this.galleryIndex.set(0);
+      this.loadedGalleryImageMap.set({});
       this.loadFlatDetail();
       this.loadFlatPictures();
       this.loadBookingState();
@@ -364,7 +380,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
     }
     const current = this.normalizedGalleryIndex(length);
     const previous = (current - 1 + length) % length;
-    this.scrollToGalleryIndex(previous);
+    this.scrollToGalleryIndex(previous, true);
   }
 
   protected goToNextGalleryPicture(): void {
@@ -374,11 +390,11 @@ export class PageUsersFlatDetailComponent implements OnInit {
     }
     const current = this.normalizedGalleryIndex(length);
     const next = (current + 1) % length;
-    this.scrollToGalleryIndex(next);
+    this.scrollToGalleryIndex(next, true);
   }
 
   protected goToGalleryPicture(index: number): void {
-    this.scrollToGalleryIndex(index);
+    this.scrollToGalleryIndex(index, true);
   }
 
   protected onGalleryScroll(): void {
@@ -407,17 +423,29 @@ export class PageUsersFlatDetailComponent implements OnInit {
     this.galleryIndex.set(nearestIndex);
   }
 
-  private scrollToGalleryIndex(index: number): void {
+  protected onGalleryImageLoad(url: string | null | undefined): void {
+    const normalizedUrl = (url ?? '').trim();
+    if (!normalizedUrl) {
+      return;
+    }
+    this.loadedGalleryImageMap.update((prev) => (
+      prev[normalizedUrl] ? prev : { ...prev, [normalizedUrl]: true }
+    ));
+  }
+
+  private scrollToGalleryIndex(index: number, smooth: boolean): void {
+    const list = this.flatCarouselList?.nativeElement;
     const slides = this.flatCarouselSlides?.toArray() ?? [];
-    if (!slides.length) {
+    if (!list || !slides.length) {
       return;
     }
     const length = slides.length;
     const bounded = ((index % length) + length) % length;
-    slides[bounded].nativeElement.scrollIntoView({
-      behavior: 'smooth',
-      inline: 'center',
-      block: 'nearest',
+    const targetSlide = slides[bounded].nativeElement;
+    const nextLeft = Math.max(0, targetSlide.offsetLeft - (list.clientWidth - targetSlide.clientWidth) / 2);
+    list.scrollTo({
+      left: nextLeft,
+      behavior: smooth ? 'smooth' : 'auto',
     });
     this.galleryIndex.set(bounded);
   }
@@ -430,7 +458,7 @@ export class PageUsersFlatDetailComponent implements OnInit {
     }
     const normalized = this.normalizedGalleryIndex(pictures.length);
     this.galleryIndex.set(normalized);
-    setTimeout(() => this.scrollToGalleryIndex(normalized), 0);
+    setTimeout(() => this.scrollToGalleryIndex(normalized, false), 0);
   }
 
   private normalizedGalleryIndex(length: number): number {

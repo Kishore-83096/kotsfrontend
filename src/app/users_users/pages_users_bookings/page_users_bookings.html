@@ -125,7 +125,8 @@
           <p><strong>Security Deposit:</strong> {{ booking.security_deposit ?? bookingModalFlatDetail()?.flat?.security_deposit ?? 'N/A' }}</p>
           <p><strong>Paid:</strong> {{ booking.paid === true ? 'Yes' : 'No' }}</p>
           <p><strong>Address:</strong> {{ booking.building_full_address ?? 'N/A' }}</p>
-          <p><strong>Created At:</strong> {{ booking.created_at ?? 'N/A' }}</p>
+          <p><strong>Booking Date:</strong> {{ formatBookingDate(booking.created_at) }}</p>
+          <p><strong>Booking Time:</strong> {{ formatBookingTime(booking.created_at) }}</p>
         </div>
         <button type="button" class="view-btn" (click)="openFlatDetailsFromBooking(booking)">
           View Flat Details

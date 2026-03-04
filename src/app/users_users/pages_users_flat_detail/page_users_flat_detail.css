@@ -358,6 +358,7 @@
   width: 100%;
   height: min(62vh, 520px);
   position: relative;
+  overflow: hidden;
   border: 1px solid var(--color-border-soft);
   border-radius: 14px;
   background: linear-gradient(170deg, #fff, #f7f0e4);
@@ -416,6 +417,22 @@
 
 .clickable-image {
   cursor: zoom-in;
+}
+
+.flat-gallery-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 0.72rem 3rem;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--color-surface) 62%, transparent);
+}
+
+.flat-gallery-loading-skeleton {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 10px;
 }
 
 .flat-gallery-placeholder {
@@ -738,6 +755,10 @@
 
   .flat-image-card {
     height: min(48vh, 360px);
+    padding: 0.58rem 2.4rem;
+  }
+
+  .flat-gallery-loading-overlay {
     padding: 0.58rem 2.4rem;
   }
 

@@ -96,11 +96,13 @@
             <div class="booking-content">
               <h3>Booking #{{ booking.id }}</h3>
               <p><strong>Status:</strong> {{ booking.status }}</p>
-              <p><strong>User ID:</strong> {{ booking.user_id }}</p>
+              <p><strong>User:</strong> {{ booking.user_display }}</p>
+              <p><strong>User Email:</strong> {{ booking.user_email || '-' }}</p>
               <p><strong>Building:</strong> {{ booking.building.name }} ({{ booking.building.id }})</p>
               <p><strong>Tower:</strong> {{ booking.tower.name }} ({{ booking.tower.id }})</p>
               <p><strong>Flat:</strong> {{ booking.flat.flat_number }} ({{ booking.flat.id }})</p>
-              <p><strong>Created At:</strong> {{ booking.created_at }}</p>
+              <p><strong>Booking Date:</strong> {{ formatBookingDate(booking.created_at) }}</p>
+              <p><strong>Booking Time:</strong> {{ formatBookingTime(booking.created_at) }}</p>
               <button type="button" class="action-btn primary" (click)="viewBooking(booking.id)" [disabled]="isLoadingBookingDetail()">
                 {{ isLoadingBookingDetail() ? 'Loading...' : 'View Booking' }}
               </button>
@@ -147,10 +149,12 @@
           <div class="booking-detail-grid">
             <article class="booking-info-card">
               <h4>Booking Info</h4>
-              <p><span>User ID</span><strong>{{ booking.user_id }}</strong></p>
+              <p><span>User</span><strong>{{ booking.user_display }}</strong></p>
+              <p><span>User Email</span><strong>{{ booking.user_email || '-' }}</strong></p>
               <p><span>Security Deposit</span><strong>{{ booking.security_deposit || '-' }}</strong></p>
               <p><span>Paid</span><strong>{{ booking.paid ? 'Yes' : 'No' }}</strong></p>
-              <p><span>Created At</span><strong>{{ booking.created_at }}</strong></p>
+              <p><span>Booking Date</span><strong>{{ formatBookingDate(booking.created_at) }}</strong></p>
+              <p><span>Booking Time</span><strong>{{ formatBookingTime(booking.created_at) }}</strong></p>
             </article>
 
             <article class="booking-info-card">

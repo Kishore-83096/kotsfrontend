@@ -69,6 +69,36 @@ gcloud run deploy kots-frontend --image asia-south1-docker.pkg.dev/<PROJECT_ID>/
   - users return to the same flat URL after login/register.
 - Home page now includes a dedicated flats section (separate grid from buildings):
   - shows all flats with image, address, rent, security deposit, tower, building, and availability status.
+- Home page section order updated:
+  - flats section appears above buildings section.
+- Flats section filters added:
+  - `All`, `Available`, `Unavailable`.
+- Home section pagination:
+  - separate pagination for flats and buildings
+  - page size set to `9` for both sections.
+- Flats filter behavior improved:
+  - filter is now global across pages (server-side status filtering)
+  - filter labels show total counts (`All`, `Available`, `Unavailable`) for full result set, not just current page.
+- Flats card amenities action:
+  - button renamed to `Flat Amenities`
+  - modal now shows amenities attached to that specific flat (same behavior as flat detail page)
+  - flat amenities button is pinned consistently at the same card position.
+- UI spacing/header polish:
+  - fixed overlap between global header and page headers when header is active.
+  - improved spacing/divider gap between flats and buildings sections.
+- Search UX aligned to backend relevance:
+  - typo-tolerant address search
+  - closest matches first
+  - unrelated address results excluded
+- End-user error messages are more specific across key API flows:
+  - clearer upload failures (for example: unable to upload image)
+  - clearer auth/search/CRUD failure messaging in page-level error areas.
+- Booking presentation updates:
+  - user and admin booking views now show `Booking Date` and `Booking Time` labels
+  - format: date `dd/mm/yy`, time `hh:mm am/pm`
+  - time is displayed in IST (`Asia/Kolkata`) for consistency.
+- Admin booking identity display:
+  - admin booking UI shows `User` (`user_display`) and `User Email` instead of only `user_id`.
 
 ## Why This Frontend Exists
 This frontend is used to turn the backend APIs into an end-to-end operational UI:
@@ -243,6 +273,12 @@ Defined in `src/app/app.routes.ts`.
   - initial bundle warning/error: `500kB / 1MB`
   - any component style warning/error: `4kB / 8kB`
 - Current builds may show warnings for budget overages in some components; these are warnings unless thresholds are exceeded at error level.
+
+## Cloud Run Deploy Notes (PowerShell)
+- Use PowerShell syntax while deploying from Windows:
+  - variable assignment: `$TAG = "v2-mar-2026"`
+  - multiline continuation: backtick (`` ` ``), not `\`
+- Ensure `BACKEND_BASE_URL` build arg points to your active backend Cloud Run URL.
 
 ## Run & Build
 From `kots_frontend/`:

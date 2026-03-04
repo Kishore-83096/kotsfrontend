@@ -97,12 +97,6 @@
     @if (flatPicturesError()) {
       <p class="error-text">{{ flatPicturesError() }}</p>
     }
-    @if (isLoadingFlatPictures()) {
-      <section class="state-card">
-        <div class="skeleton-block skeleton-line lg"></div>
-        <div class="skeleton-block skeleton-image"></div>
-      </section>
-    }
     <div class="flat-images-list">
       @if (currentGalleryPicture(); as picture) {
         <div class="gallery-slider-shell">
@@ -128,6 +122,8 @@
                       class="flat-gallery-image clickable-image"
                       [src]="slide.picture_url"
                       [alt]="slide.room_name + ' image'"
+                      (load)="onGalleryImageLoad(slide.picture_url)"
+                      (error)="onGalleryImageLoad(slide.picture_url)"
                       (click)="openImageModal(slide.picture_url, slide.room_name)"
                     />
                   </article>
@@ -143,6 +139,11 @@
             >
               &#8250;
             </button>
+            @if (shouldShowGalleryImagePlaceholder()) {
+              <div class="flat-gallery-loading-overlay" aria-hidden="true">
+                <div class="skeleton-block skeleton-image flat-gallery-loading-skeleton"></div>
+              </div>
+            }
           </div>
         </div>
         @if (galleryPictures().length > 1) {
@@ -161,6 +162,10 @@
             }
           </div>
         }
+      } @else if (isLoading() || isLoadingFlatPictures()) {
+        <article class="flat-image-card">
+          <div class="skeleton-block skeleton-image flat-gallery-loading-skeleton"></div>
+        </article>
       } @else {
         <article class="flat-image-card">
           @if (flat()?.picture_url) {
@@ -168,6 +173,8 @@
               class="flat-gallery-image clickable-image"
               [src]="flat()!.picture_url!"
               [alt]="(flat()?.flat_number ?? 'Flat') + ' image'"
+              (load)="onGalleryImageLoad(flat()!.picture_url)"
+              (error)="onGalleryImageLoad(flat()!.picture_url)"
               (click)="openImageModal(flat()!.picture_url!, flat()?.flat_number ?? 'Flat Image')"
             />
           } @else {
