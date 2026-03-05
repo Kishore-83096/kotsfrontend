@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toUserErrorMessage } from '../../shared/api_error_message';
+import { ImageCropperInteractiveComponent } from '../../shared/components/image_cropper_interactive';
 import {
   createAdminAmenityApi,
   createAdminTowerApi,
@@ -27,7 +28,7 @@ import { ImagePreviewState } from '../../shared/image_preview_state';
 @Component({
   selector: 'app-page-admins-building-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ImageCropperInteractiveComponent],
   templateUrl: './page_admins_building_detail.html',
   styleUrl: './page_admins_building_detail.css',
 })
@@ -91,6 +92,9 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
   protected readonly editAmenityDescription = signal('');
   protected readonly editAmenityPictureFile = signal<File | null>(null);
   protected readonly editAmenityPicturePreviewUrl = signal<string | null>(null);
+  protected readonly isPictureCropperOpen = signal(false);
+  protected readonly pictureCropperSourceFile = signal<File | null>(null);
+  protected readonly pictureCropperTarget = signal<'update-building' | 'add-tower' | 'add-amenity' | 'edit-amenity' | null>(null);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -245,6 +249,7 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
     this.isUpdateModalOpen.set(false);
     this.updateModalError.set(null);
     this.replacePreviewUrl(this.updatePicturePreviewUrl, null);
+    this.closePictureCropper();
   }
 
   protected setUpdateName(value: string): void {
@@ -274,8 +279,13 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
   protected onUpdatePictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.updatePictureFile.set(file);
-    this.replacePreviewUrl(this.updatePicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('update-building', file);
   }
 
   protected updateBuilding(): void {
@@ -409,6 +419,7 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
     this.isAddAmenityModalOpen.set(false);
     this.addAmenityModalError.set(null);
     this.replacePreviewUrl(this.addAmenityPicturePreviewUrl, null);
+    this.closePictureCropper();
   }
 
   protected setAddAmenityName(value: string): void {
@@ -422,8 +433,13 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
   protected onAddAmenityPictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.addAmenityPictureFile.set(file);
-    this.replacePreviewUrl(this.addAmenityPicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('add-amenity', file);
   }
 
   protected addAmenity(): void {
@@ -513,6 +529,7 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
     this.editAmenityId.set(null);
     this.editAmenityPictureFile.set(null);
     this.replacePreviewUrl(this.editAmenityPicturePreviewUrl, null);
+    this.closePictureCropper();
   }
 
   protected setEditAmenityName(value: string): void {
@@ -526,8 +543,13 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
   protected onEditAmenityPictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.editAmenityPictureFile.set(file);
-    this.replacePreviewUrl(this.editAmenityPicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('edit-amenity', file);
   }
 
   protected updateAmenity(): void {
@@ -625,6 +647,7 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
     this.isAddTowerModalOpen.set(false);
     this.addTowerModalError.set(null);
     this.replacePreviewUrl(this.addTowerPicturePreviewUrl, null);
+    this.closePictureCropper();
   }
 
   protected setAddTowerName(value: string): void {
@@ -642,8 +665,13 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
   protected onAddTowerPictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.addTowerPictureFile.set(file);
-    this.replacePreviewUrl(this.addTowerPicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('add-tower', file);
   }
 
   protected addTower(): void {
@@ -732,6 +760,42 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
     this.imagePreviewState.open(imageUrl);
   }
 
+  protected closePictureCropper(): void {
+    this.isPictureCropperOpen.set(false);
+    this.pictureCropperSourceFile.set(null);
+    this.pictureCropperTarget.set(null);
+  }
+
+  protected onPictureCropApplied(croppedFile: File): void {
+    const target = this.pictureCropperTarget();
+    if (!target) {
+      this.closePictureCropper();
+      return;
+    }
+
+    if (target === 'update-building') {
+      this.updatePictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.updatePicturePreviewUrl, croppedFile);
+    } else if (target === 'add-tower') {
+      this.addTowerPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.addTowerPicturePreviewUrl, croppedFile);
+    } else if (target === 'add-amenity') {
+      this.addAmenityPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.addAmenityPicturePreviewUrl, croppedFile);
+    } else if (target === 'edit-amenity') {
+      this.editAmenityPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.editAmenityPicturePreviewUrl, croppedFile);
+    }
+
+    this.closePictureCropper();
+  }
+
+  private openPictureCropper(target: 'update-building' | 'add-tower' | 'add-amenity' | 'edit-amenity', file: File): void {
+    this.pictureCropperTarget.set(target);
+    this.pictureCropperSourceFile.set(file);
+    this.isPictureCropperOpen.set(true);
+  }
+
   private extractErrorMessage(error: HttpErrorResponse, fallback: string): string {
     return toUserErrorMessage(error, { defaultMessage: fallback });
   }
@@ -761,6 +825,7 @@ export class PageAdminsBuildingDetailComponent implements OnInit {
     this.isLoadingAmenities.set(false);
     this.amenitiesModalError.set(null);
     this.editAmenityId.set(null);
+    this.closePictureCropper();
   }
 }
 

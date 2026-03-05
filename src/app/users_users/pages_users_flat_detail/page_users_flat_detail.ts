@@ -2,12 +2,19 @@ import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { createUsersFlatBookingApi, getUsersBookingsApi, getUsersFlatDetailApi, getUsersFlatPicturesApi } from '../api_users_auth';
+import {
+  createUsersFlatBookingApi,
+  getUsersBookingsApi,
+  getUsersBuildingFlatsApi,
+  getUsersFlatDetailApi,
+  getUsersFlatPicturesApi,
+} from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
 import { toUserErrorMessage } from '../../shared/api_error_message';
 import { ImagePreviewState } from '../../shared/image_preview_state';
 import {
   BuildingAmenityUsers,
+  UsersFlatSearchItemUsers,
   UsersCreateBookingResponseEnvelopeUsers,
   UsersFlatDetailResponseEnvelopeUsers,
   UserFlatPictureItemUsers,
@@ -48,6 +55,9 @@ export class PageUsersFlatDetailComponent implements OnInit {
   protected readonly hasAlreadyBookedThisFlat = signal(false);
   protected readonly isAmenityModalOpen = signal(false);
   protected readonly selectedAmenity = signal<BuildingAmenityUsers | null>(null);
+  protected readonly similarFlats = signal<UsersFlatSearchItemUsers[]>([]);
+  protected readonly isLoadingSimilarFlats = signal(false);
+  protected readonly similarFlatsError = signal<string | null>(null);
   protected readonly galleryIndex = signal(0);
   protected readonly loadedGalleryImageMap = signal<Record<string, true>>({});
   protected readonly shouldShowGalleryImagePlaceholder = computed(() => {
@@ -101,10 +111,14 @@ export class PageUsersFlatDetailComponent implements OnInit {
       this.isBookingModalOpen.set(false);
       this.closeAmenityModal();
       this.error.set(null);
+      this.similarFlats.set([]);
+      this.similarFlatsError.set(null);
+      this.isLoadingSimilarFlats.set(false);
       this.galleryIndex.set(0);
       this.loadedGalleryImageMap.set({});
       this.loadFlatDetail();
       this.loadFlatPictures();
+      this.loadSimilarFlatsForBuilding();
       this.loadBookingState();
     });
   }
@@ -156,6 +170,66 @@ export class PageUsersFlatDetailComponent implements OnInit {
     return this.detailResponse()?.data?.amenities ?? [];
   }
 
+  protected managerName(): string {
+    const data = this.detailResponse()?.data;
+    const value =
+      data?.manager?.username ??
+      data?.manager?.name ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['manager', 'username']) ??
+      data?.admin?.name ??
+      data?.admin_name ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['admin', 'username']);
+
+    return this.normalizeContactValue(value);
+  }
+
+  protected managerEmail(): string {
+    const data = this.detailResponse()?.data;
+    const value =
+      data?.manager?.email ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['manager', 'email']) ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['admin', 'email']) ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['building', 'admin_email']) ??
+      this.pickTopLevelString(data as Record<string, unknown> | null | undefined, 'admin_email');
+
+    return this.normalizeContactValue(value);
+  }
+
+  protected managerPhone(): string {
+    const data = this.detailResponse()?.data;
+    const value =
+      data?.manager?.mobile_number ??
+      data?.manager?.phone_number ??
+      data?.manager?.phone ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['manager', 'mobile_number']) ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['manager', 'phone_number']) ??
+      data?.admin?.phone ??
+      data?.admin_phone ??
+      data?.phone ??
+      this.pickNestedString(data as Record<string, unknown> | null | undefined, ['admin', 'mobile_number']);
+
+    return this.normalizeContactValue(value);
+  }
+
+  protected bookingPanelAddress(): string {
+    const building = this.building();
+    const tower = this.tower();
+    const towerName = (tower?.name ?? '').trim();
+    const buildingName = (building?.name ?? '').trim();
+    const fullAddress = (
+      building?.full_address ??
+      [building?.address, building?.city, building?.state, building?.pincode].filter(Boolean).join(', ')
+    ).trim();
+
+    const parts = [
+      towerName ? `Tower: ${towerName}` : null,
+      buildingName ? `Building: ${buildingName}` : null,
+      fullAddress ? `Address: ${fullAddress}` : null,
+    ].filter((part): part is string => Boolean(part));
+
+    return parts.length ? parts.join(' | ') : 'Not Available';
+  }
+
   protected flatPictures(): UserFlatPictureItemUsers[] {
     return this.flatPicturesResponse()?.data ?? [];
   }
@@ -168,6 +242,36 @@ export class PageUsersFlatDetailComponent implements OnInit {
 
     const byDetailApi = this.detailResponse()?.data?.pictures ?? [];
     return Array.isArray(byDetailApi) ? byDetailApi : [];
+  }
+
+  protected similarFlatsData(): UsersFlatSearchItemUsers[] {
+    const currentFlatId = this.flatId();
+    const currentBhk = (this.flat()?.bhk_type ?? '').toLowerCase().trim();
+    const currentRent = Number(this.flat()?.rent_amount ?? 0);
+
+    const rows = this.similarFlats().filter((item) => item.flat?.id !== currentFlatId);
+    return [...rows].sort((a, b) => {
+      const aBhk = (a.flat?.bhk_type ?? '').toLowerCase().trim();
+      const bBhk = (b.flat?.bhk_type ?? '').toLowerCase().trim();
+      const aBhkScore = aBhk && aBhk === currentBhk ? 0 : 1;
+      const bBhkScore = bBhk && bBhk === currentBhk ? 0 : 1;
+      if (aBhkScore !== bBhkScore) {
+        return aBhkScore - bBhkScore;
+      }
+      const aRent = Number(a.flat?.rent_amount ?? 0);
+      const bRent = Number(b.flat?.rent_amount ?? 0);
+      return Math.abs(aRent - currentRent) - Math.abs(bRent - currentRent);
+    });
+  }
+
+  protected openSimilarFlat(item: UsersFlatSearchItemUsers): void {
+    const buildingId = item.building?.id;
+    const towerId = item.tower?.id;
+    const flatId = item.flat?.id;
+    if (!buildingId || !towerId || !flatId) {
+      return;
+    }
+    this.router.navigateByUrl(`/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`);
   }
 
   protected galleryPictures(): Array<{ id: string; room_name: string; picture_url: string }> {
@@ -356,6 +460,36 @@ export class PageUsersFlatDetailComponent implements OnInit {
     });
   }
 
+  private loadSimilarFlatsForBuilding(): void {
+    const buildingId = this.buildingId();
+    if (!buildingId) {
+      return;
+    }
+
+    this.isLoadingSimilarFlats.set(true);
+    this.similarFlatsError.set(null);
+    this.similarFlats.set([]);
+
+    getUsersBuildingFlatsApi(this.http, this.apiBaseUrl(), null, buildingId, {
+      status: 'all',
+      page: 1,
+      per_page: 100,
+    }).subscribe({
+      next: (response) => {
+        this.similarFlats.set(response.data?.items ?? []);
+        this.isLoadingSimilarFlats.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.similarFlatsError.set(
+          toUserErrorMessage(error, {
+            defaultMessage: 'Unable to load similar properties right now.',
+          }),
+        );
+        this.isLoadingSimilarFlats.set(false);
+      },
+    });
+  }
+
   protected currentGalleryPicture(): { id: string; room_name: string; picture_url: string } | null {
     const pictures = this.galleryPictures();
     if (!pictures.length) {
@@ -473,6 +607,41 @@ export class PageUsersFlatDetailComponent implements OnInit {
       return 0;
     }
     return current;
+  }
+
+  private pickNestedString(
+    source: Record<string, unknown> | null | undefined,
+    path: [string, string],
+  ): string | null {
+    if (!source) {
+      return null;
+    }
+    const [parentKey, childKey] = path;
+    const parent = source[parentKey];
+    if (!parent || typeof parent !== 'object') {
+      return null;
+    }
+    const value = (parent as Record<string, unknown>)[childKey];
+    return typeof value === 'string' ? value : null;
+  }
+
+  private pickTopLevelString(
+    source: Record<string, unknown> | null | undefined,
+    key: string,
+  ): string | null {
+    if (!source) {
+      return null;
+    }
+    const value = source[key];
+    return typeof value === 'string' ? value : null;
+  }
+
+  private normalizeContactValue(value: unknown): string {
+    if (typeof value !== 'string') {
+      return 'Not Available';
+    }
+    const normalized = value.trim();
+    return normalized ? normalized : 'Not Available';
   }
 }
 

@@ -97,7 +97,7 @@
 .building-image,
 .building-image-placeholder {
   width: 100%;
-  height: clamp(180px, 20vw, 230px);
+  aspect-ratio: 16 / 9;
   background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
   padding: 0.35rem;
 }

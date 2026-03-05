@@ -16,9 +16,11 @@ import {
   UsersBookingDetailResponseEnvelopeUsers,
   UsersCreateBookingResponseEnvelopeUsers,
   UsersBuildingSearchResponseEnvelopeUsers,
+  UsersBuildingFlatsResponseEnvelopeUsers,
   UsersFlatDetailResponseEnvelopeUsers,
   UsersFlatPicturesResponseEnvelopeUsers,
   UsersFlatSearchResponseEnvelopeUsers,
+  UsersAllFlatsResponseEnvelopeUsers,
   UsersTowerFlatsResponseEnvelopeUsers,
   UsersTowerDetailResponseEnvelopeUsers,
   UserProfileResponseDataUsers,
@@ -140,6 +142,25 @@ export function getUsersBuildingTowersApi(
   );
 }
 
+export function getUsersBuildingFlatsApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string | null | undefined,
+  buildingId: number,
+  params?: { status?: 'all' | 'available' | 'unavailable'; page?: number; per_page?: number },
+): Observable<UsersBuildingFlatsResponseEnvelopeUsers> {
+  const searchParams = new URLSearchParams();
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+    searchParams.set(key, String(value));
+  });
+  const query = searchParams.toString();
+  const path = `${apiBaseUrl}/users/buildings/${buildingId}/flats${query ? `?${query}` : ''}`;
+  return http.get<UsersBuildingFlatsResponseEnvelopeUsers>(path, authOptions(token));
+}
+
 export function getUsersTowerDetailApi(
   http: HttpClient,
   apiBaseUrl: string,
@@ -225,6 +246,31 @@ export function searchUsersFlatsApi(
     `${apiBaseUrl}/users/flats/search?${searchParams.toString()}`,
     authOptions(token),
   );
+}
+
+export interface GetUsersFlatsParams {
+  status?: 'all' | 'available' | 'unavailable';
+  page?: number;
+  per_page?: number;
+}
+
+export function getUsersFlatsApi(
+  http: HttpClient,
+  apiBaseUrl: string,
+  token: string | null | undefined,
+  params: GetUsersFlatsParams,
+): Observable<UsersAllFlatsResponseEnvelopeUsers> {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+    searchParams.set(key, String(value));
+  });
+
+  const query = searchParams.toString();
+  const path = `${apiBaseUrl}/users/flats${query ? `?${query}` : ''}`;
+  return http.get<UsersAllFlatsResponseEnvelopeUsers>(path, authOptions(token));
 }
 
 export interface SearchUsersBuildingsParams {

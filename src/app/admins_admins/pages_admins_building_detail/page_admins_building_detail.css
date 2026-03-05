@@ -94,7 +94,7 @@
 .building-image,
 .building-image-placeholder {
   width: 100%;
-  height: clamp(180px, 22vw, 280px);
+  aspect-ratio: 16 / 9;
   border-radius: 10px;
   background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
   padding: 0.45rem;
@@ -211,7 +211,7 @@
 .tower-image,
 .tower-image-placeholder {
   width: 100%;
-  height: clamp(170px, 20vw, 250px);
+  aspect-ratio: 16 / 9;
   background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
   padding: 0.35rem;
 }
@@ -481,4 +481,3 @@ code {
     border-top: 1px solid color-mix(in srgb, var(--color-secondary) 20%, var(--color-border-soft));
   }
 }
-

@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { toUserErrorMessage } from '../../shared/api_error_message';
+import { ImageCropperInteractiveComponent } from '../../shared/components/image_cropper_interactive';
 
 import {
   createAdminBuildingApi,
@@ -25,6 +26,7 @@ import {
 @Component({
   selector: 'app-page-admins',
   standalone: true,
+  imports: [ImageCropperInteractiveComponent],
   templateUrl: './page_admins.html',
   styleUrl: '../styles_admins/style_admins.css',
 })
@@ -60,6 +62,8 @@ export class PageAdminsComponent implements OnInit {
   protected readonly createTotalTowers = signal('');
   protected readonly selectedCreatePictureFile = signal<File | null>(null);
   protected readonly selectedCreatePicturePreviewUrl = signal<string | null>(null);
+  protected readonly isCreatePictureCropperOpen = signal(false);
+  protected readonly createPictureCropperSourceFile = signal<File | null>(null);
   protected readonly createModalError = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -113,6 +117,7 @@ export class PageAdminsComponent implements OnInit {
   protected closeCreateModal(): void {
     this.isCreateModalOpen.set(false);
     this.createModalError.set(null);
+    this.closeCreatePictureCropper();
   }
 
   protected setCreateName(value: string): void {
@@ -142,8 +147,27 @@ export class PageAdminsComponent implements OnInit {
   protected onCreatePictureFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.selectedCreatePictureFile.set(file);
-    this.replacePreviewUrl(this.selectedCreatePicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+
+    if (!file) {
+      return;
+    }
+
+    this.createPictureCropperSourceFile.set(file);
+    this.isCreatePictureCropperOpen.set(true);
+  }
+
+  protected closeCreatePictureCropper(): void {
+    this.isCreatePictureCropperOpen.set(false);
+    this.createPictureCropperSourceFile.set(null);
+  }
+
+  protected onCreatePictureCropApplied(croppedFile: File): void {
+    this.selectedCreatePictureFile.set(croppedFile);
+    this.replacePreviewUrl(this.selectedCreatePicturePreviewUrl, croppedFile);
+    this.closeCreatePictureCropper();
   }
 
   protected openImagePreview(imageUrl: string): void {
@@ -421,6 +445,7 @@ export class PageAdminsComponent implements OnInit {
     this.createTotalTowers.set('');
     this.selectedCreatePictureFile.set(null);
     this.replacePreviewUrl(this.selectedCreatePicturePreviewUrl, null);
+    this.closeCreatePictureCropper();
   }
 
   private extractErrorMessage(error: HttpErrorResponse, fallback: string): string {

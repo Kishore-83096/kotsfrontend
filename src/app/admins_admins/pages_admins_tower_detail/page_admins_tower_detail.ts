@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toUserErrorMessage } from '../../shared/api_error_message';
+import { ImageCropperInteractiveComponent } from '../../shared/components/image_cropper_interactive';
 import {
   createAdminFlatApi,
   createAdminFlatPictureApi,
@@ -33,7 +34,7 @@ import { ImagePreviewState } from '../../shared/image_preview_state';
 @Component({
   selector: 'app-page-admins-tower-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ImageCropperInteractiveComponent],
   templateUrl: './page_admins_tower_detail.html',
   styleUrl: './page_admins_tower_detail.css',
 })
@@ -124,6 +125,9 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected readonly editFlatPictureFilePreviewUrl = signal<string | null>(null);
   protected readonly isUpdatingPictureId = signal<number | null>(null);
   protected readonly deletingPictureId = signal<number | null>(null);
+  protected readonly isPictureCropperOpen = signal(false);
+  protected readonly pictureCropperSourceFile = signal<File | null>(null);
+  protected readonly pictureCropperTarget = signal<'update-tower' | 'add-flat' | 'update-flat' | 'add-flat-picture' | 'edit-flat-picture' | null>(null);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -300,6 +304,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.isUpdateTowerModalOpen.set(false);
     this.updateTowerModalError.set(null);
     this.replacePreviewUrl(this.updateTowerPicturePreviewUrl, null);
+    this.closePictureCropper();
   }
 
   protected setUpdateTowerName(value: string): void {
@@ -317,8 +322,13 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected onUpdateTowerPictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.updateTowerPictureFile.set(file);
-    this.replacePreviewUrl(this.updateTowerPicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('update-tower', file);
   }
 
   protected updateTower(): void {
@@ -458,6 +468,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.isAddFlatModalOpen.set(false);
     this.addFlatModalError.set(null);
     this.replacePreviewUrl(this.addFlatPicturePreviewUrl, null);
+    this.closePictureCropper();
   }
 
   protected setAddFlatNumber(value: string): void {
@@ -491,8 +502,13 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected onAddFlatPictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.addFlatPictureFile.set(file);
-    this.replacePreviewUrl(this.addFlatPicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('add-flat', file);
   }
 
   protected addFlat(): void {
@@ -597,6 +613,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.updateFlatPictureFile.set(null);
     this.replacePreviewUrl(this.updateFlatPicturePreviewUrl, null);
     this.updateFlatId.set(null);
+    this.closePictureCropper();
   }
 
   protected setUpdateFlatNumber(value: string): void {
@@ -630,8 +647,13 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected onUpdateFlatPictureSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.updateFlatPictureFile.set(file);
-    this.replacePreviewUrl(this.updateFlatPicturePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('update-flat', file);
   }
 
   protected updateFlat(): void {
@@ -855,6 +877,48 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.imagePreviewState.open(imageUrl);
   }
 
+  protected closePictureCropper(): void {
+    this.isPictureCropperOpen.set(false);
+    this.pictureCropperSourceFile.set(null);
+    this.pictureCropperTarget.set(null);
+  }
+
+  protected onPictureCropApplied(croppedFile: File): void {
+    const target = this.pictureCropperTarget();
+    if (!target) {
+      this.closePictureCropper();
+      return;
+    }
+
+    if (target === 'update-tower') {
+      this.updateTowerPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.updateTowerPicturePreviewUrl, croppedFile);
+    } else if (target === 'add-flat') {
+      this.addFlatPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.addFlatPicturePreviewUrl, croppedFile);
+    } else if (target === 'update-flat') {
+      this.updateFlatPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.updateFlatPicturePreviewUrl, croppedFile);
+    } else if (target === 'add-flat-picture') {
+      this.addFlatRoomPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, croppedFile);
+    } else if (target === 'edit-flat-picture') {
+      this.editFlatPictureFile.set(croppedFile);
+      this.replacePreviewUrl(this.editFlatPictureFilePreviewUrl, croppedFile);
+    }
+
+    this.closePictureCropper();
+  }
+
+  private openPictureCropper(
+    target: 'update-tower' | 'add-flat' | 'update-flat' | 'add-flat-picture' | 'edit-flat-picture',
+    file: File,
+  ): void {
+    this.pictureCropperTarget.set(target);
+    this.pictureCropperSourceFile.set(file);
+    this.isPictureCropperOpen.set(true);
+  }
+
   protected openFlatPicturesModal(flatId: number): void {
     this.isFlatPicturesModalOpen.set(true);
     this.flatPicturesFlatId.set(flatId);
@@ -882,6 +946,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.isAddingFlatPicture.set(false);
     this.isUpdatingPictureId.set(null);
     this.deletingPictureId.set(null);
+    this.closePictureCropper();
   }
 
   protected setAddFlatPictureRoomName(value: string): void {
@@ -891,8 +956,13 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected onAddFlatPictureFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.addFlatRoomPictureFile.set(file);
-    this.replacePreviewUrl(this.addFlatRoomPictureFilePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('add-flat-picture', file);
   }
 
   protected addFlatPicture(): void {
@@ -967,8 +1037,13 @@ export class PageAdminsTowerDetailComponent implements OnInit {
   protected onEditFlatPictureFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     const file = target?.files?.[0] ?? null;
-    this.editFlatPictureFile.set(file);
-    this.replacePreviewUrl(this.editFlatPictureFilePreviewUrl, file);
+    if (target) {
+      target.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    this.openPictureCropper('edit-flat-picture', file);
   }
 
   protected updateFlatPicture(pictureId: number): void {
@@ -1189,6 +1264,7 @@ export class PageAdminsTowerDetailComponent implements OnInit {
     this.isAddingFlatPicture.set(false);
     this.isUpdatingPictureId.set(null);
     this.deletingPictureId.set(null);
+    this.closePictureCropper();
   }
 }
 

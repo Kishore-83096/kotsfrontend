@@ -197,6 +197,19 @@ export interface UsersFlatDetailDataUsers {
   building: UserBuildingSummaryUsers;
   pictures?: UserFlatPictureItemUsers[];
   amenities: BuildingAmenityUsers[];
+  manager?: {
+    name?: string | null;
+    username?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    mobile_number?: string | null;
+    phone_number?: string | null;
+    [key: string]: unknown;
+  };
+  admin?: { name?: string | null; phone?: string | null; [key: string]: unknown };
+  admin_name?: string | null;
+  admin_phone?: string | null;
+  phone?: string | null;
   [key: string]: unknown;
 }
 
@@ -222,6 +235,36 @@ export interface UsersFlatSearchDataUsers {
   per_page: number;
   total: number;
   total_pages: number;
+  [key: string]: unknown;
+}
+
+export interface UsersHomeFlatItemUsers {
+  flat_id: number;
+  tower_id: number;
+  building_id: number;
+  flat_status: 'available' | 'unavailable';
+  rent_per_month: string;
+  picture_url?: string | null;
+  flat_number: string;
+  floor_number: number;
+  bhk_type: string;
+  building_name: string;
+  building_address: string;
+  [key: string]: unknown;
+}
+
+export interface UsersAllFlatsDataUsers {
+  items: UsersHomeFlatItemUsers[];
+  page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  status_counts?: {
+    all?: number;
+    available?: number;
+    unavailable?: number;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 
@@ -268,6 +311,8 @@ export type UsersTowerFlatsResponseEnvelopeUsers = AuthEnvelopeUsers<UsersTowerF
 export type UsersFlatDetailResponseEnvelopeUsers = AuthEnvelopeUsers<UsersFlatDetailDataUsers>;
 export type UsersFlatPicturesResponseEnvelopeUsers = AuthEnvelopeUsers<UserFlatPictureItemUsers[]>;
 export type UsersFlatSearchResponseEnvelopeUsers = AuthEnvelopeUsers<UsersFlatSearchDataUsers>;
+export type UsersAllFlatsResponseEnvelopeUsers = AuthEnvelopeUsers<UsersAllFlatsDataUsers>;
+export type UsersBuildingFlatsResponseEnvelopeUsers = AuthEnvelopeUsers<UsersFlatSearchDataUsers>;
 export type UsersBuildingSearchResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBuildingSearchDataUsers>;
 export type UsersCreateBookingResponseEnvelopeUsers = AuthEnvelopeUsers<UserBookingResponseDataUsers>;
 export type UsersBookingsResponseEnvelopeUsers = AuthEnvelopeUsers<UsersBookingListItemUsers[]>;

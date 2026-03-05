@@ -272,3 +272,11 @@
     </article>
   </section>
 }
+
+<app-image-cropper-interactive
+  [isOpen]="isCreatePictureCropperOpen()"
+  [sourceFile]="createPictureCropperSourceFile()"
+  [aspectRatio]="16 / 9"
+  (cancelled)="closeCreatePictureCropper()"
+  (cropped)="onCreatePictureCropApplied($event)"
+/>

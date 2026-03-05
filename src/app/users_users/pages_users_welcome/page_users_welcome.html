@@ -102,7 +102,7 @@
     }
 
     <section class="flats-grid">
-      @for (item of filteredFlatsData(); track item.flat.id) {
+      @for (item of filteredFlatsData(); track item.flat_id) {
         <article
           class="flat-card"
           role="button"
@@ -110,14 +110,14 @@
           (click)="openFlatDetail(item)"
           (keydown.enter)="openFlatDetail(item)"
           (keydown.space)="openFlatDetail(item); $event.preventDefault()"
-          aria-label="Open details for flat {{ item.flat.flat_number }}"
+          aria-label="Open details for flat {{ item.flat_number }}"
         >
-          <h4 class="flat-title">{{ item.flat.flat_number }}</h4>
-          @if (item.flat.picture_url || item.building.picture_url) {
+          <h4 class="flat-title">{{ item.flat_number }}</h4>
+          @if (item.picture_url) {
             <img
               class="flat-image"
-              [src]="item.flat.picture_url || item.building.picture_url || ''"
-              [alt]="item.flat.flat_number + ' image'"
+              [src]="item.picture_url || ''"
+              [alt]="item.flat_number + ' image'"
             />
           } @else {
             <div class="flat-image-placeholder">No Image</div>
@@ -125,17 +125,17 @@
           <div class="flat-meta-table">
             <p>
               <span>Address</span>
-              <strong>{{ item.building.full_address ?? (item.building.address + ', ' + item.building.city + ', ' + item.building.state + ', ' + item.building.pincode) }}</strong>
+              <strong>{{ item.building_address }}</strong>
             </p>
-            <p><span>Rent</span><strong>{{ item.flat.rent_amount }}</strong></p>
-            <p><span>Security Deposit</span><strong>{{ item.flat.security_deposit }}</strong></p>
-            <p><span>Tower</span><strong>{{ item.tower.name }}</strong></p>
-            <p><span>Building</span><strong>{{ item.building.name }}</strong></p>
+            <p><span>Rent</span><strong>{{ item.rent_per_month }}</strong></p>
+            <p><span>Floor</span><strong>{{ item.floor_number }}</strong></p>
+            <p><span>BHK Type</span><strong>{{ item.bhk_type }}</strong></p>
+            <p><span>Building</span><strong>{{ item.building_name }}</strong></p>
             <p>
               <span>Status</span>
               <strong>
-                <span class="flat-status-pill" [class.available]="item.flat.is_available" [class.not-available]="!item.flat.is_available">
-                  {{ item.flat.is_available ? 'Available' : 'Not Available' }}
+                <span class="flat-status-pill" [class.available]="item.flat_status === 'available'" [class.not-available]="item.flat_status !== 'available'">
+                  {{ item.flat_status === 'available' ? 'Available' : 'Not Available' }}
                 </span>
               </strong>
             </p>
@@ -340,11 +340,9 @@
         }
         @if (amenitiesModalKind() === 'flat') {
           <p class="building-name-line">
-            <strong>Flat:</strong> {{ selectedAmenitiesFlat()?.flat?.flat_number ?? 'N/A' }}
+            <strong>Flat:</strong> {{ selectedAmenitiesFlat()?.flat_number ?? 'N/A' }}
             |
-            <strong>Tower:</strong> {{ selectedAmenitiesFlat()?.tower?.name ?? 'N/A' }}
-            |
-            <strong>Building:</strong> {{ selectedAmenitiesFlat()?.building?.name ?? 'N/A' }}
+            <strong>Building:</strong> {{ selectedAmenitiesFlat()?.building_name ?? 'N/A' }}
           </p>
         }
 

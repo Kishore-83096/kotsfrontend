@@ -172,7 +172,7 @@
 
 .building-media-card {
   width: min(320px, 40vw);
-  min-height: clamp(90px, 11vw, 135px);
+  aspect-ratio: 16 / 9;
   position: relative;
   border: 1px solid var(--color-border-soft);
   border-radius: 14px;
@@ -185,8 +185,7 @@
 .building-image,
 .building-image-placeholder {
   width: 100%;
-  height: 100%;
-  min-height: clamp(90px, 11vw, 135px);
+  aspect-ratio: 16 / 9;
   background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
   padding: 0.35rem;
 }
@@ -282,7 +281,7 @@
 .tower-card {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 3rem 210px minmax(0, 1fr);
+  grid-template-rows: 3rem auto minmax(0, 1fr);
   grid-template-areas:
     "title"
     "image"
@@ -314,9 +313,7 @@
 .tower-image-placeholder {
   grid-area: image;
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  max-height: none;
+  aspect-ratio: 16 / 9;
   background: color-mix(in srgb, var(--color-surface-subtle) 70%, #fff);
   padding: 0.35rem;
   align-self: start;

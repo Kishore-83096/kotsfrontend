@@ -7,6 +7,13 @@
       </section>
       <div class="header-actions-block">
         <div class="header-meta-actions">
+          <nav class="tower-path" aria-label="Tower path">
+            <a class="tower-path-link" [routerLink]="['/users/buildings', buildingId(), 'towers']">
+              {{ building()?.name ?? 'Building' }}
+            </a>
+            <span class="tower-path-sep">/</span>
+            <span class="tower-path-current">{{ tower()?.name ?? 'Tower' }}</span>
+          </nav>
           @if (building()) {
             <button
               type="button"
@@ -24,17 +31,6 @@
               <span class="btn-label">View Amenities</span>
             </button>
           }
-          <a
-            class="action-btn ghost header-inline-btn icon-btn"
-            [routerLink]="['/users/buildings', buildingId(), 'towers']"
-            [attr.title]="'Go back to ' + (building()?.name ?? 'Building') + ' towers'"
-            aria-label="Go back to towers"
-          >
-            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M14 7l-5 5 5 5 1.4-1.4L11.8 12l3.6-3.6zM20 11H10v2h10z" />
-            </svg>
-            <span class="btn-label">Go Back to Towers</span>
-          </a>
         </div>
       </div>
     </div>

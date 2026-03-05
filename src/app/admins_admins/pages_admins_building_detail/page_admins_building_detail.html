@@ -436,3 +436,11 @@
     </article>
   </section>
 }
+
+<app-image-cropper-interactive
+  [isOpen]="isPictureCropperOpen()"
+  [sourceFile]="pictureCropperSourceFile()"
+  [aspectRatio]="16 / 9"
+  (cancelled)="closePictureCropper()"
+  (cropped)="onPictureCropApplied($event)"
+/>

@@ -1,4 +1,4 @@
-# KOTS Angular Frontend
+﻿# KOTS Angular Frontend
 
 ## Summary
 This project is the Angular frontend for the KOTS rental platform.  
@@ -99,6 +99,19 @@ gcloud run deploy kots-frontend --image asia-south1-docker.pkg.dev/<PROJECT_ID>/
   - time is displayed in IST (`Asia/Kolkata`) for consistency.
 - Admin booking identity display:
   - admin booking UI shows `User` (`user_display`) and `User Email` instead of only `user_id`.
+- Flat details page redesign and behavior updates:
+  - removed floor-plan, nearby places, and old similar-properties placeholder sections.
+  - manager contact panel now shows `Manager Name`, `Manager Email`, and `Manager Phone` with `Not available` fallback.
+  - booking panel now prioritizes critical information order and keeps `Book Flat` CTA fixed at the panel bottom.
+  - booking panel now displays complete address, including tower and building context.
+  - property media section now hides old preview-image strip and uses the main media presentation.
+  - header content was cleaned up and aligned with tower/building detail header behavior.
+- Similar properties integration:
+  - flat details now loads Similar Properties from the same building using backend API `GET /users/buildings/{building_id}/flats`.
+  - cards include flat images and are styled to match home-page flat grids.
+  - current flat is excluded from similar list and cards route to selected flat detail.
+- Responsive parity improvements:
+  - flat-details layout and header actions now follow the same responsive behavior pattern used on home/tower/building pages across mobile, tablet, and desktop.
 
 ## Why This Frontend Exists
 This frontend is used to turn the backend APIs into an end-to-end operational UI:
@@ -394,3 +407,4 @@ Recommended startup order:
 1. Start Flask backend
 2. Start Angular frontend
 3. Login and verify `/home`, search, and bookings flows
+

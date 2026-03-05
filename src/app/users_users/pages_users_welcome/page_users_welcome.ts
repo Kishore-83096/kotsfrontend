@@ -1,21 +1,21 @@
 import { API_BASE_URL } from '../../shared/app_env';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   getUsersBuildingAmenitiesApi,
+  getUsersFlatsApi,
   getUsersFlatDetailApi,
   getUsersProfileApi,
   searchUsersBuildingsApi,
-  searchUsersFlatsApi,
 } from '../api_users_auth';
 import { UsersAuthState } from '../state_users_auth';
 import {
   BuildingAmenityUsers,
+  UsersAllFlatsResponseEnvelopeUsers,
   UsersBuildingSearchResponseEnvelopeUsers,
   UserBuildingListItemUsers,
-  UsersFlatSearchItemUsers,
-  UsersFlatSearchResponseEnvelopeUsers,
+  UsersHomeFlatItemUsers,
   UserProfileResponseEnvelopeUsers,
   UsersBuildingAmenitiesDataUsers,
 } from '../typescript_users/type_users';
@@ -32,6 +32,7 @@ export class PageUsersWelcomeComponent implements OnInit {
   private readonly buildingsPerPage = 9;
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly authState = inject(UsersAuthState);
 
   protected readonly apiBaseUrl = signal(API_BASE_URL);
@@ -39,7 +40,7 @@ export class PageUsersWelcomeComponent implements OnInit {
   protected readonly userDataError = signal<string | null>(null);
   protected readonly buildingsResponse = signal<UsersBuildingSearchResponseEnvelopeUsers | null>(null);
   protected readonly currentBuildingsPage = signal(1);
-  protected readonly flatsResponse = signal<UsersFlatSearchResponseEnvelopeUsers | null>(null);
+  protected readonly flatsResponse = signal<UsersAllFlatsResponseEnvelopeUsers | null>(null);
   protected readonly isLoadingFlats = signal(false);
   protected readonly flatsError = signal<string | null>(null);
   protected readonly currentFlatsPage = signal(1);
@@ -123,7 +124,7 @@ export class PageUsersWelcomeComponent implements OnInit {
 
     const flats = this.flatsData();
     const total = flats.length;
-    const available = flats.filter((item) => item.flat.is_available).length;
+    const available = flats.filter((item) => item.flat_status === 'available').length;
     return {
       total,
       available,
@@ -137,7 +138,7 @@ export class PageUsersWelcomeComponent implements OnInit {
   protected readonly isAmenitiesModalOpen = signal(false);
   protected readonly amenitiesModalKind = signal<'building' | 'flat'>('building');
   protected readonly selectedAmenitiesBuilding = signal<UserBuildingListItemUsers | null>(null);
-  protected readonly selectedAmenitiesFlat = signal<UsersFlatSearchItemUsers | null>(null);
+  protected readonly selectedAmenitiesFlat = signal<UsersHomeFlatItemUsers | null>(null);
   protected readonly isAmenitiesModalLoading = signal(false);
   protected readonly amenitiesModalError = signal<string | null>(null);
   protected readonly amenitiesModalData = signal<BuildingAmenityUsers[]>([]);
@@ -145,7 +146,7 @@ export class PageUsersWelcomeComponent implements OnInit {
     if (this.amenitiesModalKind() === 'flat') {
       const selectedFlat = this.selectedAmenitiesFlat();
       if (selectedFlat) {
-        return `Flat ${selectedFlat.flat.flat_number} Amenities`;
+        return `Flat ${selectedFlat.flat_number} Amenities`;
       }
       return 'Flat Amenities';
     }
@@ -170,13 +171,28 @@ export class PageUsersWelcomeComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadUserData();
-    this.loadFeaturedFlats();
+    const tab = this.parseHomeTab(this.route.snapshot.queryParamMap.get('tab'));
+    const flatStatus = this.parseFlatStatus(this.route.snapshot.queryParamMap.get('flat_status'));
+    const flatsPage = this.parsePositiveInt(this.route.snapshot.queryParamMap.get('flats_page'), 1);
+    const buildingsPage = this.parsePositiveInt(this.route.snapshot.queryParamMap.get('buildings_page'), 1);
+
+    this.activeHomeTab.set(tab);
+    this.flatStatusFilter.set(flatStatus);
+    this.currentFlatsPage.set(flatsPage);
+    this.currentBuildingsPage.set(buildingsPage);
+
+    if (tab === 'buildings') {
+      this.loadUserData(buildingsPage);
+    } else {
+      this.loadFeaturedFlats(flatsPage);
+    }
+
+    this.syncHomeStateToQueryParams();
     this.loadProfileIdentity();
   }
 
-  protected loadUserData(): void {
-    this.loadBuildingsPage(1);
+  protected loadUserData(page = 1): void {
+    this.loadBuildingsPage(page);
   }
 
   protected goToBuildingsPage(page: number): void {
@@ -197,6 +213,7 @@ export class PageUsersWelcomeComponent implements OnInit {
 
   private loadBuildingsPage(page = 1): void {
     this.currentBuildingsPage.set(page);
+    this.syncHomeStateToQueryParams();
     this.isLoadingUserData.set(true);
     this.userDataError.set(null);
     this.buildingsResponse.set(null);
@@ -224,11 +241,11 @@ export class PageUsersWelcomeComponent implements OnInit {
     return this.buildingsResponse()?.data?.items ?? [];
   }
 
-  protected flatsData(): UsersFlatSearchItemUsers[] {
+  protected flatsData(): UsersHomeFlatItemUsers[] {
     return this.flatsResponse()?.data?.items ?? [];
   }
 
-  protected filteredFlatsData(): UsersFlatSearchItemUsers[] {
+  protected filteredFlatsData(): UsersHomeFlatItemUsers[] {
     return this.flatsData();
   }
 
@@ -250,6 +267,10 @@ export class PageUsersWelcomeComponent implements OnInit {
 
   protected setActiveHomeTab(tab: 'flats' | 'buildings'): void {
     this.activeHomeTab.set(tab);
+    this.syncHomeStateToQueryParams();
+    if (tab === 'buildings' && !this.buildingsResponse() && !this.isLoadingUserData()) {
+      this.loadUserData(this.currentBuildingsPage());
+    }
   }
 
   protected goToFlatsPage(page: number): void {
@@ -281,14 +302,14 @@ export class PageUsersWelcomeComponent implements OnInit {
     this.router.navigateByUrl(`/users/buildings/${buildingId}/towers`);
   }
 
-  protected openFlatDetail(item: UsersFlatSearchItemUsers): void {
-    const buildingId = item.building.id;
-    const towerId = item.tower.id;
-    const flatId = item.flat.id;
+  protected openFlatDetail(item: UsersHomeFlatItemUsers): void {
+    const buildingId = item.building_id;
+    const towerId = item.tower_id;
+    const flatId = item.flat_id;
     this.router.navigateByUrl(`/users/buildings/${buildingId}/towers/${towerId}/flats/${flatId}`);
   }
 
-  protected openFlatAmenitiesModal(item: UsersFlatSearchItemUsers): void {
+  protected openFlatAmenitiesModal(item: UsersHomeFlatItemUsers): void {
     this.amenitiesModalKind.set('flat');
     this.selectedAmenitiesFlat.set(item);
     this.selectedAmenitiesBuilding.set(null);
@@ -296,7 +317,7 @@ export class PageUsersWelcomeComponent implements OnInit {
     this.amenitiesModalError.set(null);
     this.amenitiesModalData.set([]);
 
-    const cached = this.amenitiesByFlat()[item.flat.id];
+    const cached = this.amenitiesByFlat()[item.flat_id];
     if (cached) {
       this.amenitiesModalData.set(cached);
       this.isAmenitiesModalLoading.set(false);
@@ -353,11 +374,12 @@ export class PageUsersWelcomeComponent implements OnInit {
 
   private loadFeaturedFlats(page = 1): void {
     this.currentFlatsPage.set(page);
+    this.syncHomeStateToQueryParams();
     this.isLoadingFlats.set(true);
     this.flatsError.set(null);
     this.flatsResponse.set(null);
 
-    searchUsersFlatsApi(this.http, this.apiBaseUrl(), null, {
+    getUsersFlatsApi(this.http, this.apiBaseUrl(), null, {
       status: this.flatStatusFilter(),
       page,
       per_page: this.flatsPerPage,
@@ -400,7 +422,7 @@ export class PageUsersWelcomeComponent implements OnInit {
     });
   }
 
-  private loadFlatAmenities(item: UsersFlatSearchItemUsers): void {
+  private loadFlatAmenities(item: UsersHomeFlatItemUsers): void {
     this.isAmenitiesModalLoading.set(true);
     this.amenitiesModalError.set(null);
 
@@ -408,13 +430,13 @@ export class PageUsersWelcomeComponent implements OnInit {
       this.http,
       this.apiBaseUrl(),
       null,
-      item.building.id,
-      item.tower.id,
-      item.flat.id,
+      item.building_id,
+      item.tower_id,
+      item.flat_id,
     ).subscribe({
       next: (response) => {
         const amenities = Array.isArray(response.data?.amenities) ? response.data.amenities : [];
-        this.amenitiesByFlat.update((prev) => ({ ...prev, [item.flat.id]: amenities }));
+        this.amenitiesByFlat.update((prev) => ({ ...prev, [item.flat_id]: amenities }));
         this.amenitiesModalData.set(amenities);
         this.isAmenitiesModalLoading.set(false);
       },
@@ -426,6 +448,38 @@ export class PageUsersWelcomeComponent implements OnInit {
         );
         this.isAmenitiesModalLoading.set(false);
       },
+    });
+  }
+
+  private parsePositiveInt(rawValue: string | null, fallback: number): number {
+    const parsed = Number(rawValue);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      return fallback;
+    }
+    return Math.floor(parsed);
+  }
+
+  private parseHomeTab(rawValue: string | null): 'flats' | 'buildings' {
+    return rawValue === 'buildings' ? 'buildings' : 'flats';
+  }
+
+  private parseFlatStatus(rawValue: string | null): 'all' | 'available' | 'unavailable' {
+    if (rawValue === 'available' || rawValue === 'unavailable') {
+      return rawValue;
+    }
+    return 'all';
+  }
+
+  private syncHomeStateToQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        tab: this.activeHomeTab(),
+        flat_status: this.flatStatusFilter(),
+        flats_page: this.currentFlatsPage(),
+        buildings_page: this.currentBuildingsPage(),
+      },
+      replaceUrl: true,
     });
   }
 
