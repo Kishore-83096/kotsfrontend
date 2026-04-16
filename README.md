@@ -10,9 +10,8 @@ It provides a role-aware UI for:
 The app is built with Angular standalone components, Angular Router, reactive forms, and typed API envelopes aligned with the Flask backend.
 
 ## Project Section
-- **Main Live App (Frontend):** https://kots-frontend-445482244619.asia-south1.run.app
-- **Live API (Backend):** https://kots-flask-445482244619.asia-south1.run.app
-- **Deployment Platform:** Google Cloud Run (Docker)
+- **Main Live App (Frontend):** https://kotsfrontend.onrender.com
+- **Live API (Backend):** https://kots.onrender.com
 - **Project Explanation:** KOTS is a rental management platform frontend where users can discover and book flats, admins can manage inventory and booking workflows, and master users can control admin access. The project focuses on role-based UX, reliable API integration, and production-oriented flows for property operations.
 
 ## Quick Run Modes
